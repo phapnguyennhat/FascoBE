@@ -9,7 +9,9 @@ import { AllExceptionsFilter } from 'all-exception.filter';
 import { UserModule } from './module/user/user.module';
 import { AuthModule } from './module/auth/auth.module';
 import { ProductModule } from './module/product/product.module';
-import { FirebaseStorageModule } from './firebase-storage/firebase-storage.module';
+import { FirebaseStorageModule } from './module/firebase-storage/firebase-storage.module';
+import { GoogleAuthModule } from './module/google-auth/google-auth.module';
+import { ImageModule } from './module/image/image.module';
 import LogsMiddleware from './util/log.middleware';
 
 
@@ -24,6 +26,8 @@ import LogsMiddleware from './util/log.middleware';
     AuthModule,
     ProductModule,
     FirebaseStorageModule,
+    GoogleAuthModule,
+    ImageModule,
    
   ],
   controllers: [AppController],

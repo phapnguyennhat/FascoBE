@@ -4,8 +4,8 @@ import { UserService } from '../user/user.service';
 import { RegisterDto } from './dto/register.dto';
 import * as bcrypt from 'bcrypt'
 import JwtAuthGuard from './guard/jwt-auth.guard';
-import { LocalAuthGuard } from './guard/local-auth.guard';
 import JwtRefreshGuard from './guard/jwtRefresh.guard';
+import { LocalAuthGuard } from './guard/local-auth.guard';
 
 @Controller('auth')
 export class AuthController {

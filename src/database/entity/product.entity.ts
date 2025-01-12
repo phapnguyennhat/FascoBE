@@ -1,8 +1,10 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Check, Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "./user.entity";
 import { Image } from "./image.entity";
 
 @Entity()
+@Check(`"starRating" >=0 AND "starRating" <=5`)
+
 export class Product {
   @PrimaryGeneratedColumn('uuid')
   id: string
@@ -10,19 +12,19 @@ export class Product {
   @Column()
   name: string;
 
-  @Column()
+  @Column({ type: 'decimal', precision: 2, scale: 1, default: 5 })
   starRating: number
 
-  @Column()
+  @Column({default: 0})
   reviewNumber: number;
 
-  @Column()
+  @Column('decimal', { precision: 10, scale: 2 })
   price: number;
 
-  @Column()
+  @Column({default: 0})
   pieceAvail: number
 
-  @Column()
+  @Column({default: 0})
   sold: number
 
   @Column()
@@ -30,6 +32,4 @@ export class Product {
   
   @ManyToOne(()=>User, {onDelete: 'CASCADE'})
   user: User
-
-
 }
