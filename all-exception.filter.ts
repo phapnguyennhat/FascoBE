@@ -16,7 +16,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
     // In certain situations `httpAdapter` might not be available in the
     // constructor method, thus we should resolve it here.
-    console.log(exception);
+    console.log(exception );
     const { httpAdapter } = this.httpAdapterHost;
 
     const ctx = host.switchToHttp();
@@ -32,7 +32,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         : null;
     message =
       httpStatus === HttpStatus.INTERNAL_SERVER_ERROR
-        ? 'Lỗi hệ thống'
+        ? ('Lỗi hệ thống')
         : message;
 
     const responseBody = {

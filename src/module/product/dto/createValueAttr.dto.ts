@@ -1,6 +1,6 @@
-import { IsNotEmpty, IsString, MinLength } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString, IsUUID } from "class-validator";
 
-export class ValueAttrDto {
+export class CreateValueAttrDto {
   @IsString()
   @IsNotEmpty()
   value: string
@@ -9,5 +9,16 @@ export class ValueAttrDto {
   @IsNotEmpty()
   attrName: string
 
-  
+  // @IsUUID()
+  // @IsNotEmpty()
+  // productId: string
+
+  @IsUUID()
+  @IsNotEmpty()
+  @IsOptional()
+  imageId?: string
+}
+
+export class CreateValueAttr extends CreateValueAttrDto{
+  productId: string
 }

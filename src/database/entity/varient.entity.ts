@@ -21,7 +21,7 @@ export class Varient{
   @Column({ nullable: true })
   discountPrice: number;
 
-  @OneToMany(()=> ValueAttr, (valueAttr: ValueAttr)=>valueAttr.varient )
+  @OneToMany(()=> ValueAttr, (valueAttr: ValueAttr)=>valueAttr.varient, {cascade: true} )
   valueAttrs: ValueAttr[]
   
 }

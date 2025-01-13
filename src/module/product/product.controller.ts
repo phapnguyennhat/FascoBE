@@ -7,6 +7,8 @@ import {
   CreateAttrProductDtos,
 } from './dto/createAttrProduct.dto';
 import { IdParam } from 'src/common/validate';
+import { CreateValueAttr, CreateValueAttrDto } from './dto/createValueAttr.dto';
+import { CreateVarientDto } from './dto/createVarient.dto';
 
 @Controller('product')
 export class ProductController {
@@ -21,13 +23,36 @@ export class ProductController {
     });
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post(':id/attrProduct')
+  @UseGuards(JwtAuthGuard)
   createAttrProduct(
     @Param() { id }: IdParam,
     @Body() createAttrProductDtos: CreateAttrProductDtos,
   ) {
-    const createAttrProducts : CreateAttrProduct[] = createAttrProductDtos.createAttrProducts.map(item => ({...item, productId: id}))
-    return this.productService.createAttr(createAttrProducts)
+    const createAttrProducts: CreateAttrProduct[] =
+      createAttrProductDtos.createAttrProducts.map((item) => ({
+        ...item,
+        productId: id,
+      }));
+    return this.productService.createAttr(createAttrProducts);
+  }
+
+  @Post(':id/varient')
+  @UseGuards(JwtAuthGuard)
+  async createVarient(
+    @Param() { id }: IdParam,
+    @Body() createVarientDto: CreateVarientDto,
+  ) {
+    const product = await this.productService.findById(id)
+    const valueAttrs: CreateValueAttr[] = createVarientDto.valueAttrs.map(item =>{
+      
+      return {...item, productId: id}
+    })
+
+    return this.productService.createVarient({
+      ...createVarientDto,
+      valueAttrs,
+      productId: id,
+    });
   }
 }
