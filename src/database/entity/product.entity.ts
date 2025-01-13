@@ -18,9 +18,6 @@ export class Product {
   @Column({default: 0})
   reviewNumber: number;
 
-  @Column('decimal', { precision: 10, scale: 2 })
-  price: number;
-
   @Column({default: 0})
   pieceAvail: number
 

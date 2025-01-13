@@ -7,11 +7,11 @@ export class CreateProductDto{
   @MinLength(10)
   name: string
 
-  @Type(()=>Number)
-  @IsNotEmpty()
-  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'Price must have at most 2 decimal places' })
-  @IsPositive({ message: 'Price must be a positive number' })
-  price: number
+  // @Type(()=>Number)
+  // @IsNotEmpty()
+  // @IsNumber({ maxDecimalPlaces: 2 }, { message: 'Price must have at most 2 decimal places' })
+  // @IsPositive({ message: 'Price must be a positive number' })
+  // price: number
 
   @Type(()=>Number)
   @IsNumber()

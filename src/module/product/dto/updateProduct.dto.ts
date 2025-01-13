@@ -19,10 +19,10 @@ export class UpdateProductDto {
   @IsOptional()
   reviewNumber: number
 
-  @Type(()=>Number)
-  @IsNumber()
-  @IsOptional()
-  price: number
+  // @Type(()=>Number)
+  // @IsNumber()
+  // @IsOptional()
+  // price: number
 
   @Type(()=>Number)
   @IsNumber()
