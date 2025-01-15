@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+  import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QueryRunner, Repository } from 'typeorm';
 import { FirebaseStorageService } from '../firebase-storage/firebase-storage.service';
@@ -14,16 +14,16 @@ export class ImageService {
     this.folder = 'startup'
   }
 
-  async create(imageFile: Express.Multer.File, queryRunner ?: QueryRunner){
+  async create(imageFile: Express.Multer.File, productId?:string, queryRunner ?: QueryRunner){
     if(!imageFile){
       throw new BadRequestException('Vui long tải file lên')
     }
     const result = await this.firebaseStorageService.uploadFile(imageFile)
     if(queryRunner){
 
-      return queryRunner.manager.save(Image, result)
+      return queryRunner.manager.save(Image, {...result, productId})
     }
-    return this.imageRepo.save(result)
+    return this.imageRepo.save({...result, productId})
   }
 
   async delete(imageId:string, queryRunner?: QueryRunner){

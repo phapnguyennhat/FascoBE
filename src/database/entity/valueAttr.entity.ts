@@ -1,12 +1,13 @@
-import { BeforeInsert, BeforeUpdate, Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { Image } from "./image.entity";
 import { AttrProduct } from "./attrProduct.entity";
 import { Varient } from "./varient.entity";
+import { extend } from "joi";
+import { PatternEntity } from "src/common/patternEntity";
 
 @Entity()
-export class ValueAttr{
-  @PrimaryGeneratedColumn('uuid')
-  id: string
+@Unique(['value', 'attrName', 'productId']) 
+export class ValueAttr extends PatternEntity {
 
   @Column()
   value: string
@@ -18,27 +19,21 @@ export class ValueAttr{
   @JoinColumn()
   image: Image
 
-  @Column({name: 'attrProductName'})
+  @Column({nullable: true})
   attrName: string
 
-  @Column({name: 'attrProductProductId'})
+  @Column({nullable: true})
   productId: string
 
-  @Column()
-  varientId:string
-  
   @ManyToOne(()=>AttrProduct)
+  @JoinColumn([
+    { name: 'attrName', referencedColumnName: 'name' },
+    { name: 'productId', referencedColumnName: 'productId' },
+  ])
   attrProduct: AttrProduct
 
-  @ManyToOne(()=> Varient)
-  varient: Varient
+  @ManyToMany(()=>Varient, (varient: Varient)=>varient.valueAttrs, {onDelete: 'CASCADE'})
+  varients: Varient[]
 
-  @BeforeInsert()
-  @BeforeUpdate()
-  async checkImageConstraint() {
-    const attrProduct = await this.attrProduct; // Use relationship to fetch attrProduct
-    if (attrProduct && attrProduct.hasImage && !this.imageId) {
-      throw new Error('imageId cannot be null if attrProduct hasImage is true');
-    }
-  }
+
 }

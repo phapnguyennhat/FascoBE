@@ -1,19 +1,27 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { ValueAttr } from "./valueAttr.entity";
+import { AfterInsert, AfterUpdate, Entity,  Column, ManyToOne, BaseEntity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable } from 'typeorm';
+import { Product } from './product.entity';
+import { PatternEntity } from 'src/common/patternEntity';
+import { ValueAttr } from './valueAttr.entity';
 
 @Entity()
-export class Varient{
+export class Varient extends  BaseEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string
+  id: string;
+
+  @CreateDateColumn()
+  createAt: Date
+
+  @UpdateDateColumn()
+  updateAt: Date
 
   @Column()
-  productId: string
+  productId: string;
 
-  @Column({default: 0})
-  pieceAvail: number
+  @Column({ default: 0 })
+  pieceAvail: number;
 
-  @Column({default: 0})
-  sold:number
+  @Column({ default: 0 })
+  sold: number;
 
   @Column('decimal', { precision: 10, scale: 2 })
   price: number;
@@ -21,7 +29,11 @@ export class Varient{
   @Column({ nullable: true })
   discountPrice: number;
 
-  @OneToMany(()=> ValueAttr, (valueAttr: ValueAttr)=>valueAttr.varient, {cascade: true} )
-  valueAttrs: ValueAttr[]
   
+  @ManyToOne(() => Product)
+  product: Product;
+
+  @ManyToMany(()=>ValueAttr, (valueAttr:ValueAttr)=>valueAttr.varients)
+  @JoinTable({name: 'varient_value'})
+  valueAttrs: ValueAttr[]
 }

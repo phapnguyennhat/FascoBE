@@ -1,0 +1,11 @@
+{
+  createValueAttrs: [
+    {
+      value: string
+      image: Express.Multer.File
+      attrName: string
+    }
+  ]
+}
+
+

@@ -1,4 +1,18 @@
-import { Body, Controller, Param, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Post,
+  Query,
+  Req,
+  UploadedFile,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { ProductService } from './product.service';
 import JwtAuthGuard from '../auth/guard/jwt-auth.guard';
 import { CreateProductDto } from './dto/createProduct.dto';
@@ -7,20 +21,47 @@ import {
   CreateAttrProductDtos,
 } from './dto/createAttrProduct.dto';
 import { IdParam } from 'src/common/validate';
-import { CreateValueAttr, CreateValueAttrDto } from './dto/createValueAttr.dto';
+import {
+  CreateAbulkValueAttrDto,
+  CreateValueAttr,
+  CreateValueAttrDto,
+} from './dto/createValueAttr.dto';
 import { CreateVarientDto } from './dto/createVarient.dto';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { DataSource } from 'typeorm';
+import { ImageService } from '../image/image.service';
+import { ValueAttr } from 'src/database/entity/valueAttr.entity';
+import { AttrProduct } from 'src/database/entity/attrProduct.entity';
+import { QueryProductDto } from './dto/queryProduct';
+import { hasDuplicateAttrName } from 'src/util/hasDuplicateAttrName';
 
 @Controller('product')
 export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+  constructor(
+    private readonly productService: ProductService,
+    private readonly dataSource: DataSource,
+    private readonly imageService: ImageService,
+  ) {}
 
   @Post('')
   @UseGuards(JwtAuthGuard)
   create(@Req() req, @Body() createProductDto: CreateProductDto) {
-    return this.productService.create({
-      ...createProductDto,
-      userId: req.user.id,
-    });
+    return this.productService.create(req.user.id, createProductDto);
+  }
+
+  @Post(':id/image')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FilesInterceptor('images'))
+  async createImagesProduct(
+    @UploadedFiles() files: Express.Multer.File[],
+    @Param() { id }: IdParam,
+  ) {
+    if (files.length === 0) {
+      throw new BadRequestException('Images is required');
+    }
+
+    await Promise.all(files.map((file) => this.imageService.create(file, id)));
+    return { message: 'upload images successfully' };
   }
 
   @Post(':id/attrProduct')
@@ -37,22 +78,96 @@ export class ProductController {
     return this.productService.createAttr(createAttrProducts);
   }
 
+  @Post(':id/valueAttr')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('image'))
+  //  TODO: DONE
+  async createValueAttr(
+    @Param() { id }: IdParam,
+    @Body() createValueAttrDto: CreateValueAttrDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    const queryRunner =  this.dataSource.createQueryRunner();
+    if (!file) {
+      throw new BadRequestException('Images is required');
+    }
+    const attrProduct = await this.productService.findAttrByNameAndProductId(
+      createValueAttrDto.attrName,
+      id,
+    );
+    if (!attrProduct.hasImage) {
+      throw new BadRequestException('This Attr is not requered images');
+    }
+    try {
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+
+      const new_image = await this.imageService.create(file, undefined, queryRunner);
+      const new_valueAttr = await this.productService.createValueAttr({
+        ...createValueAttrDto,
+        productId: id,
+        imageId: new_image.id
+        
+      }, queryRunner);
+
+        await queryRunner.commitTransaction();
+      return { message: 'create successfully' };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      queryRunner.release();
+    }
+  }
+
+  @Post(':id/abulk/valueAttr')
+  @UseGuards(JwtAuthGuard)
+  async createAbulkValueAttr(
+    @Param() { id }: IdParam,
+    @Body() createAbulkValueAttrDto: CreateAbulkValueAttrDto,
+  ) {
+    const createValueAttrs: CreateValueAttr[] =
+      createAbulkValueAttrDto.createValueAttrDtos.map((item) => ({
+        ...item,
+        productId: id,
+      }));
+    return this.productService.createAbulkValueAttr(createValueAttrs);
+  }
+
   @Post(':id/varient')
   @UseGuards(JwtAuthGuard)
   async createVarient(
     @Param() { id }: IdParam,
     @Body() createVarientDto: CreateVarientDto,
   ) {
-    const product = await this.productService.findById(id)
-    const valueAttrs: CreateValueAttr[] = createVarientDto.valueAttrs.map(item =>{
-      
-      return {...item, productId: id}
-    })
 
-    return this.productService.createVarient({
-      ...createVarientDto,
-      valueAttrs,
-      productId: id,
-    });
+    const attrProducts: AttrProduct[] = await this.productService.findAttrByProductId(id)
+    const {valueAttrIds} = createVarientDto
+    if(attrProducts.length !== valueAttrIds.length){
+      throw new BadRequestException('Missing attribute')
+    }
+
+    const valueAttrs : ValueAttr[] = await this.productService.findValueByIdsAndProductId(valueAttrIds, id)
+
+    if(valueAttrIds.length !== valueAttrs.length){
+      throw new NotFoundException('value not found')
+    }
+
+    if (hasDuplicateAttrName(valueAttrs)) {
+      throw new BadRequestException('Duplicate attrName found in valueAttrs');
+    }
+
+    const varient = await this.productService.findVarientByValueIds(valueAttrIds)
+    if(varient){
+      throw new BadRequestException('This varient already have created ')
+    }
+    return  this.productService.createVarient({...createVarientDto, productId:id, valueAttrs});
+  }
+
+  @Get()
+  async findProduct(@Query() queryProduct: QueryProductDto) {
+    return this.productService.findProduct(queryProduct);
   }
 }
+
+

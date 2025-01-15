@@ -1,5 +1,6 @@
 import { Type } from "class-transformer";
-import { IsNotEmpty, IsNumber, IsPositive, IsString, Min, MinLength } from "class-validator";
+import { IsArray, IsEnum, IsNotEmpty, IsNumber, IsPositive, IsString, Min, MinLength } from "class-validator";
+import { Tag } from "src/database/entity/tag.entity";
 
 export class CreateProductDto{
   @IsString()
@@ -7,19 +8,22 @@ export class CreateProductDto{
   @MinLength(10)
   name: string
 
-  // @Type(()=>Number)
-  // @IsNotEmpty()
-  // @IsNumber({ maxDecimalPlaces: 2 }, { message: 'Price must have at most 2 decimal places' })
-  // @IsPositive({ message: 'Price must be a positive number' })
-  // price: number
-
-  @Type(()=>Number)
-  @IsNumber()
   @IsNotEmpty()
-  @Min(10)
-  pieceAvail: number
+  @IsString()
+  categoryName: string
+
+  @IsString({each :true})
+  @MinLength(1, {each: true})
+  @IsArray()
+  @IsNotEmpty()
+  tagNames: string[]
+
+  @IsString()
+  @IsNotEmpty()
+  brandName: string
 }
 
 export class CreateProduct extends CreateProductDto{
   userId: string
+  tags: Tag[]
 }

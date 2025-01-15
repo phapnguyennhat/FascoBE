@@ -12,7 +12,7 @@ export class AttrProduct {
   @Column({default: false})
   hasImage: boolean
 
-  @ManyToOne(()=>Product)
+  @ManyToOne(()=>Product )
   product: Product
 
 }

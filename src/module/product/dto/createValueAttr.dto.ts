@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsOptional, IsString, IsUUID } from "class-validator";
+import { Type } from "class-transformer";
+import { ArrayMinSize, IsArray, IsNotEmpty, IsOptional, IsString, IsUUID, ValidateNested } from "class-validator";
 
 export class CreateValueAttrDto {
   @IsString()
@@ -9,16 +10,18 @@ export class CreateValueAttrDto {
   @IsNotEmpty()
   attrName: string
 
-  // @IsUUID()
-  // @IsNotEmpty()
-  // productId: string
-
-  @IsUUID()
-  @IsNotEmpty()
-  @IsOptional()
-  imageId?: string
 }
 
 export class CreateValueAttr extends CreateValueAttrDto{
   productId: string
+  imageId?: string
 }
+
+export class CreateAbulkValueAttrDto {
+  @IsArray()
+  @ArrayMinSize(1)
+  @Type(()=> CreateValueAttrDto)
+  @ValidateNested({each: true})
+  createValueAttrDtos: CreateValueAttrDto[]
+}
+

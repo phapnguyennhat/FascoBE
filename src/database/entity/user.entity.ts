@@ -1,6 +1,8 @@
 import { Exclude } from "class-transformer";
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import {  Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Image } from "./image.entity";
+import { extend } from "joi";
+import { PatternEntity } from "src/common/patternEntity";
 
 export enum AuthBy {
   GOOGLE='GOOGLE',
@@ -13,9 +15,8 @@ export interface IAuthPayload {
 }
 
 @Entity()
-export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id: string
+export class User extends PatternEntity {
+ 
 
   @Column()
   name: string
