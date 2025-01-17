@@ -103,6 +103,9 @@ export class ProductService {
     } = queryProduct;
     const queryBuilder = this.productRepo
       .createQueryBuilder('product')
+      .innerJoin('product.user', 'user')
+      .innerJoin('product.images', 'images')
+      .select(['product', 'user.name', 'images.url'])
       .skip((page - 1) * limit)
       .take(limit);
 

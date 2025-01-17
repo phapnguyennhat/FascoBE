@@ -6,7 +6,6 @@ import { PatternEntity } from "src/common/patternEntity";
 @Entity()
 export class Image extends PatternEntity {
   
-
   @Column()
   url: string
 
