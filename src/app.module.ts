@@ -12,6 +12,7 @@ import { ProductModule } from './module/product/product.module';
 import { FirebaseStorageModule } from './module/firebase-storage/firebase-storage.module';
 import { GoogleAuthModule } from './module/google-auth/google-auth.module';
 import { ImageModule } from './module/image/image.module';
+import { FacebookAuthModule } from './module/facebook-auth/facebook-auth.module';
 import LogsMiddleware from './util/log.middleware';
 
 
@@ -28,6 +29,7 @@ import LogsMiddleware from './util/log.middleware';
     FirebaseStorageModule,
     GoogleAuthModule,
     ImageModule,
+    FacebookAuthModule,
    
   ],
   controllers: [AppController],

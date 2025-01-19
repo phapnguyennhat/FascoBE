@@ -28,5 +28,8 @@ export const validationSchema = Joi.object({
   MESSAGINGSENDERID: Joi.string().required(),
   APPID: Joi.string().required(),
   MEASUREMENTID: Joi.string().required(),
+
+  FACEBOOK_CLIENT_ID: Joi.string().required(),
+  FACEBOOK_CLIENT_SECRET: Joi.string().required()
   
 });
