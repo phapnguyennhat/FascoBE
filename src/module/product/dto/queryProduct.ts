@@ -8,6 +8,7 @@ import {
   IsPositive,
   IsNumber,
   IsEnum,
+  Min,
 } from 'class-validator';
 import { QueryParam } from 'src/common/queryParam';
 
@@ -20,29 +21,31 @@ export enum ECollection {
 }
 
 export class QueryProductDto  extends QueryParam {
-  @IsString({ each: true })
-  @MinLength(1, { each: true })
-  @IsArray()
+  
   @IsOptional()
-  @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
-  tagNames: string[];
+  @IsString()
+  tag: string;
 
   @IsOptional()
   @IsString()
   categoryName: string;
+
+  @IsOptional()
+  @IsString()
+  size?:string
 
   @IsString()
   @IsOptional()
   brandName: string;
 
   @Type(() => Number)
-  @IsPositive()
+  @Min(0)
   @IsNumber()
   @IsOptional()
   minPrice: number;
 
   @Type(() => Number)
-  @IsPositive()
+  @Min(0)
   @IsNumber()
   @IsOptional()
   maxPrice: number;

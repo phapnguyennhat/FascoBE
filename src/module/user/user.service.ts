@@ -8,6 +8,7 @@ import { CreateUserDto } from './dto/createUser.dto';
 import { UpdateUserDto } from './dto/updateUser.dto';
 import { TokenPayload } from 'google-auth-library';
 import * as bcrypt from 'bcrypt'
+import { Profile } from '../facebook-auth/response/profile';
 
 @Injectable()
 export class UserService {
@@ -50,6 +51,16 @@ export class UserService {
       authBy: AuthBy.GOOGLE,
     });
   }
+
+  async createWithFacebook(userData: Profile){
+    return this.userRepo.save({
+      email: userData.email,
+      name: userData.name,
+      authBy: AuthBy.FACEBOOK
+    })
+  }
+
+
 
   async getUserIfRefreshTokenMatches(refreshToken: string, userId: string) {
     const user: User = await this.getById(userId);

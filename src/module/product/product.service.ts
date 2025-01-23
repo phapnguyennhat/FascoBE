@@ -99,7 +99,8 @@ export class ProductService {
       collection,
       maxPrice,
       minPrice,
-      tagNames,
+      tag,
+      size
     } = queryProduct;
     const queryBuilder = this.productRepo
       .createQueryBuilder('product')
@@ -109,11 +110,19 @@ export class ProductService {
       .skip((page - 1) * limit)
       .take(limit);
 
+    
+    if(size){
+      queryBuilder.innerJoin('product.attrProducts', 'attrProducts').innerJoin('attrProducts.valueAttrs', 'valueAttrs')
+      .andWhere("valueAttrs.attrName='Size' ")
+      .andWhere('valueAttrs.value = :size',{size})
+
+    }
+
     // Thêm điều kiện cho tagNames (nếu có)
-    if (tagNames && tagNames.length > 0) {
+    if (tag) {
       queryBuilder
         .leftJoin('product.tags', 'tag')
-        .andWhere('tag.name IN (:...tagNames)', { tagNames });
+        .andWhere('tag.name = :tag', { tag });
     }
 
     // Thêm điều kiện cho categoryName (nếu có)

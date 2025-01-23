@@ -7,6 +7,7 @@ import { PatternEntity } from "src/common/patternEntity";
 export enum AuthBy {
   GOOGLE='GOOGLE',
   GITHUB='GITHUB',
+  FACEBOOK='FACEBOOK',
   LOCAL='LOCAL'
 }
 
@@ -21,10 +22,10 @@ export class User extends PatternEntity {
   @Column()
   name: string
 
-  @Column()
+  @Column({nullable: true})
   username: string
 
-  @Column()
+  @Column({nullable: true})
   @Exclude()
   password: string
 

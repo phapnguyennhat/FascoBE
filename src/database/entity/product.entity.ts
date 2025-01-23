@@ -6,6 +6,7 @@ import { Brand } from "./brand.entity";
 import { Varient } from "./varient.entity";
 import { PatternEntity } from "src/common/patternEntity";
 import { Image } from "./image.entity";
+import { AttrProduct } from "./attrProduct.entity";
 
 
 
@@ -58,6 +59,9 @@ export class Product extends PatternEntity {
 
   @OneToMany(()=> Varient, (varient: Varient)=>varient.product)
   varients: Varient
+
+  @OneToMany(()=>AttrProduct, (attrProduct: AttrProduct)=>attrProduct.product)
+  attrProducts: AttrProduct[]
 
   @OneToMany(()=>Image, (image: Image)=>image.product)
   images: Image[]

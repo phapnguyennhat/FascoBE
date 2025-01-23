@@ -47,9 +47,9 @@ export class GoogleAuthService {
   }
 
   async handleRegisterdUser(user: User) {
-    if (user.authBy !== AuthBy.GOOGLE) {
-      throw new BadRequestException('Email đã có người sử dụng');
-    }
+    // if (user.authBy !== AuthBy.GOOGLE) {
+    //   throw new BadRequestException('Email đã có người sử dụng');
+    // }
 
     const { accessTokenCookie, refreshTokenCookie } =
       await this.getCookiesForUser(user);
