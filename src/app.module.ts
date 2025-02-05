@@ -15,6 +15,7 @@ import { ImageModule } from './module/image/image.module';
 import { FacebookAuthModule } from './module/facebook-auth/facebook-auth.module';
 import { BrandModule } from './module/brand/brand.module';
 import { TagModule } from './module/tag/tag.module';
+import { CartModule } from './cart/cart.module';
 import LogsMiddleware from './util/log.middleware';
 
 
@@ -34,6 +35,7 @@ import LogsMiddleware from './util/log.middleware';
     FacebookAuthModule,
     BrandModule,
     TagModule,
+    CartModule,
    
   ],
   controllers: [AppController],

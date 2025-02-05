@@ -1,6 +1,5 @@
 import { AfterInsert, AfterUpdate, Entity,  Column, ManyToOne, BaseEntity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable } from 'typeorm';
 import { Product } from './product.entity';
-import { PatternEntity } from 'src/common/patternEntity';
 import { ValueAttr } from './valueAttr.entity';
 
 @Entity()

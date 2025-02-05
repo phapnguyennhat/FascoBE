@@ -21,6 +21,8 @@ import { CreateValueAttr } from './dto/createValueAttr.dto';
 import { Tag } from 'src/database/entity/tag.entity';
 import { ECollection, QueryProductDto } from './dto/queryProduct';
 import { VarientValue } from 'src/database/entity/varient_value.entity';
+import { SearchParams } from 'src/common/searchParams';
+import { string } from 'joi';
 
 @Injectable()
 export class ProductService {
@@ -100,22 +102,30 @@ export class ProductService {
       maxPrice,
       minPrice,
       tag,
-      size
+      size,
     } = queryProduct;
     const queryBuilder = this.productRepo
       .createQueryBuilder('product')
       .innerJoin('product.user', 'user')
       .innerJoin('product.images', 'images')
-      .select(['product', 'user.name', 'images.url'])
+      .select([
+        'product.id',
+        'product.name',
+        'product.price',
+        'product.pieceAvail',
+        'product.reviewNumber',
+        'user.name',
+        'images.url',
+      ])
       .skip((page - 1) * limit)
       .take(limit);
 
-    
-    if(size){
-      queryBuilder.innerJoin('product.attrProducts', 'attrProducts').innerJoin('attrProducts.valueAttrs', 'valueAttrs')
-      .andWhere("valueAttrs.attrName='Size' ")
-      .andWhere('valueAttrs.value = :size',{size})
-
+    if (size) {
+      queryBuilder
+        .innerJoin('product.attrProducts', 'attrProducts')
+        .innerJoin('attrProducts.valueAttrs', 'valueAttrs')
+        .andWhere("valueAttrs.attrName='Size' ")
+        .andWhere('valueAttrs.value = :size', { size });
     }
 
     // Thêm điều kiện cho tagNames (nếu có)
@@ -173,7 +183,8 @@ export class ProductService {
       }
     }
     // Execute the query
-    return await queryBuilder.getMany();
+    const [data, count] = await queryBuilder.getManyAndCount();
+    return { products: data, count };
   }
 
   async findAttrByNameAndProductId(name: string, productId: string) {
@@ -195,6 +206,40 @@ export class ProductService {
     return this.valueAttrRepo.findOneBy({ id: valueAttrId });
   }
 
+
+
+  async findProductById(productId: string) {
+    const product: Product = await this.productRepo
+      .createQueryBuilder('product')
+      .innerJoin('product.images', 'images')
+      .innerJoin('product.attrProducts', 'attrProducts')
+      .innerJoin('attrProducts.valueAttrs', 'valueAttrs')
+      .leftJoin('valueAttrs.image', 'image')
+      .orderBy('attrProducts.hasImage', 'DESC')
+      .andWhere('product.id=:productId', {productId})
+      .select([
+        'product.name',
+        'product.starRating',
+        'product.reviewNumber',
+        'product.sold',
+        'product.pieceAvail',
+        'product.price',
+        'attrProducts.name',
+        'valueAttrs.value',
+        'valueAttrs.id',
+        'images.id',
+        'images.url',
+        'image.url'
+
+      ])
+      .getOne();
+
+    if (!product) {
+      throw new NotFoundException('Product not exist');
+    }
+    return product;
+  }
+
   async findValueByIdsAndProductId(valueAttrIds: string[], productId: string) {
     return this.valueAttrRepo.find({
       where: {
@@ -208,30 +253,47 @@ export class ProductService {
     return this.valueAttrRepo.findBy({ productId });
   }
 
-  async findVarientById(varientId :string){
-    const varient: Varient = await this.varientRepo.findOneBy({id: varientId})
-    if(!varient){
-      throw new NotFoundException('Not found varient')
+  async findVarientById(varientId: string) {
+    const varient: Varient = await this.varientRepo.findOneBy({
+      id: varientId,
+    });
+    if (!varient) {
+      throw new NotFoundException('Not found varient');
     }
-    return varient
+    return varient;
+  }
+
+  async getValueAttrIds(searchParams: SearchParams, productId: string) {
+    const valueAttrIds = await Promise.all(  
+      Object.entries(searchParams).map(async ([key, value]) => {
+        const valueAttr = await this.valueAttrRepo.findOneBy({
+          attrName: key,
+          value: value as string,
+          productId,
+        });
+        
+        return valueAttr?.id
+      })
+    );
+  
+    return valueAttrIds.filter((id): id is string => id !== undefined);
   }
 
   async findVarientByValueIds(valueAttrIds: string[]) {
-    const varientIds: {varientId: string}[]= await this.varientValueRepo
-    .createQueryBuilder('vv')
-    .select('vv.varientId', 'varientId')
-    .where('vv.valueAttrId = ANY(:valueAttrIds)', { valueAttrIds })
-    .groupBy('vv.varientId')
-    .having(
-      `ARRAY_AGG(vv.valueAttrId ORDER BY vv.valueAttrId) @> ARRAY[:valueAttrIds]::uuid[]`,
-      { valueAttrIds }
-    )
-    .getRawMany();
-    if(varientIds.length!==1){
-      return null
+    const varientIds: { varientId: string }[] = await this.varientValueRepo
+      .createQueryBuilder('vv')
+      .select('vv.varientId', 'varientId')
+      .where('vv.valueAttrId = ANY(:valueAttrIds)', { valueAttrIds })
+      .groupBy('vv.varientId')
+      .having(
+        `ARRAY_AGG(vv.valueAttrId ORDER BY vv.valueAttrId) @> ARRAY[:valueAttrIds]::uuid[]`,
+        { valueAttrIds },
+      )
+      .getRawMany();
+    if (varientIds.length !== 1) {
+      return null;
     }
-    return this.varientRepo.findOneBy({id: varientIds[0].varientId})
-    
+    return this.varientRepo.findOneBy({ id: varientIds[0].varientId });
   }
 
   async delete(productId: string, queryRunner?: QueryRunner) {

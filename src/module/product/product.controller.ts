@@ -34,6 +34,8 @@ import { ValueAttr } from 'src/database/entity/valueAttr.entity';
 import { AttrProduct } from 'src/database/entity/attrProduct.entity';
 import { QueryProductDto } from './dto/queryProduct';
 import { hasDuplicateAttrName } from 'src/util/hasDuplicateAttrName';
+import { SearchParams } from 'src/common/searchParams';
+import { Product } from 'src/database/entity/product.entity';
 
 @Controller('product')
 export class ProductController {
@@ -87,7 +89,7 @@ export class ProductController {
     @Body() createValueAttrDto: CreateValueAttrDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    const queryRunner =  this.dataSource.createQueryRunner();
+    const queryRunner = this.dataSource.createQueryRunner();
     if (!file) {
       throw new BadRequestException('Images is required');
     }
@@ -102,15 +104,21 @@ export class ProductController {
       await queryRunner.connect();
       await queryRunner.startTransaction();
 
-      const new_image = await this.imageService.create(file, undefined, queryRunner);
-      const new_valueAttr = await this.productService.createValueAttr({
-        ...createValueAttrDto,
-        productId: id,
-        imageId: new_image.id
-        
-      }, queryRunner);
+      const new_image = await this.imageService.create(
+        file,
+        undefined,
+        queryRunner,
+      );
+      const new_valueAttr = await this.productService.createValueAttr(
+        {
+          ...createValueAttrDto,
+          productId: id,
+          imageId: new_image.id,
+        },
+        queryRunner,
+      );
 
-        await queryRunner.commitTransaction();
+      await queryRunner.commitTransaction();
       return { message: 'create successfully' };
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -140,33 +148,61 @@ export class ProductController {
     @Param() { id }: IdParam,
     @Body() createVarientDto: CreateVarientDto,
   ) {
-
-    const attrProducts: AttrProduct[] = await this.productService.findAttrByProductId(id)
-    const {valueAttrIds} = createVarientDto
-    if(attrProducts.length !== valueAttrIds.length){
-      throw new BadRequestException('Missing attribute')
+    const attrProducts: AttrProduct[] =
+      await this.productService.findAttrByProductId(id);
+    const { valueAttrIds } = createVarientDto;
+    if (attrProducts.length !== valueAttrIds.length) {
+      throw new BadRequestException('Missing attribute');
     }
 
-    const valueAttrs : ValueAttr[] = await this.productService.findValueByIdsAndProductId(valueAttrIds, id)
+    const valueAttrs: ValueAttr[] =
+      await this.productService.findValueByIdsAndProductId(valueAttrIds, id);
 
-    if(valueAttrIds.length !== valueAttrs.length){
-      throw new NotFoundException('value not found')
+    if (valueAttrIds.length !== valueAttrs.length) {
+      throw new NotFoundException('value not found');
     }
 
     if (hasDuplicateAttrName(valueAttrs)) {
       throw new BadRequestException('Duplicate attrName found in valueAttrs');
     }
 
-    const varient = await this.productService.findVarientByValueIds(valueAttrIds)
-    if(varient){
-      throw new BadRequestException('This varient already have created ')
+    const varient =
+      await this.productService.findVarientByValueIds(valueAttrIds);
+    if (varient) {
+      throw new BadRequestException('This varient already have created ');
     }
-    return  this.productService.createVarient({...createVarientDto, productId:id, valueAttrs});
+    return this.productService.createVarient({
+      ...createVarientDto,
+      productId: id,
+      valueAttrs,
+    });
+  }
+
+  @Get(':id/varient')
+  async findVarient(
+    @Query() searchParams: SearchParams,
+    @Param() { id }: IdParam,
+  ) {
+    const product: Product = await this.productService.findProductById(id);
+    const valueAttrIds: string[] = await this.productService.getValueAttrIds(
+      searchParams,
+      id,
+    );
+    if(product.attrProducts.length !== valueAttrIds.length){
+      throw new BadRequestException('Can not find varient')
+    }
+    return this.productService.findVarientByValueIds(valueAttrIds)
+    
   }
 
   @Get()
   async findProduct(@Query() queryProduct: QueryProductDto) {
     return this.productService.findProduct(queryProduct);
+  }
+
+  @Get(':id')
+  async findProductById(@Param() { id }: IdParam) {
+    return this.productService.findProductById(id);
   }
 }
 

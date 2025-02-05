@@ -34,6 +34,4 @@ export class ValueAttr extends PatternEntity {
 
   @ManyToMany(()=>Varient, (varient: Varient)=>varient.valueAttrs, {onDelete: 'CASCADE'})
   varients: Varient[]
-
-
 }
