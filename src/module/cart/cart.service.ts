@@ -29,9 +29,14 @@ export class CartService {
     return this.cartItemRepo.update({id, userId}, updateCartItemDto);
   }
 
+  async deleteCartItem (id: string, userId: string){
+    return this.cartItemRepo.delete({userId, id})
+  }
+
   async getCartByUserId(userId: string) {
     return this.cartItemRepo
       .createQueryBuilder('cartItem')
+      .orderBy('cartItem.createAt', 'DESC')
       .innerJoin('cartItem.varient', 'varient')
       .innerJoin('varient.product', 'product')
       .innerJoin('varient.valueAttrs', 'valueAttrs')

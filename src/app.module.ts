@@ -15,7 +15,11 @@ import { ImageModule } from './module/image/image.module';
 import { FacebookAuthModule } from './module/facebook-auth/facebook-auth.module';
 import { BrandModule } from './module/brand/brand.module';
 import { TagModule } from './module/tag/tag.module';
-import { CartModule } from './cart/cart.module';
+import { CartModule } from './module/cart/cart.module';
+import { ProvinceModule } from './module/province/province.module';
+import { DistrictModule } from './module/district/district.module';
+import { CommuneModule } from './module/commune/commune.module';
+import { AddressModule } from './address/address.module';
 import LogsMiddleware from './util/log.middleware';
 
 
@@ -36,6 +40,10 @@ import LogsMiddleware from './util/log.middleware';
     BrandModule,
     TagModule,
     CartModule,
+    ProvinceModule,
+    DistrictModule,
+    CommuneModule,
+    AddressModule,
    
   ],
   controllers: [AppController],

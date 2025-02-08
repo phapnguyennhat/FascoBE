@@ -1,3 +1,4 @@
+import { Address } from './address.entity';
 import { Exclude } from "class-transformer";
 import {  Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Image } from "./image.entity";
@@ -46,4 +47,11 @@ export class User extends PatternEntity {
   @OneToOne(()=> Image)
   @JoinColumn()
   avatar: Image
+
+  @Column({nullable: true})
+  addressId: string
+
+  @OneToOne(()=>Address)
+  @JoinColumn()
+  address: Address
 }

@@ -25,7 +25,7 @@ export class Varient extends  BaseEntity {
   @Column('decimal', { precision: 10, scale: 2 })
   price: number;
 
-  @Column({ nullable: true })
+  @Column('decimal', { precision: 10, scale: 2 , nullable: true})
   discountPrice: number;
 
   
