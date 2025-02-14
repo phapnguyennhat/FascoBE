@@ -208,8 +208,8 @@ export class ProductService {
 
 
 
-  async findProductById(productId: string) {
-    const product: Product = await this.productRepo
+  async findProductById(productId: string, userId?:string) {
+    const queryBuilder = this.productRepo
       .createQueryBuilder('product')
       .innerJoin('product.images', 'images')
       .innerJoin('product.attrProducts', 'attrProducts')
@@ -217,7 +217,9 @@ export class ProductService {
       .leftJoin('valueAttrs.image', 'image')
       .orderBy('attrProducts.hasImage', 'DESC')
       .andWhere('product.id=:productId', {productId})
+    
       .select([
+        'product.id',
         'product.name',
         'product.starRating',
         'product.reviewNumber',
@@ -229,10 +231,16 @@ export class ProductService {
         'valueAttrs.id',
         'images.id',
         'images.url',
-        'image.url'
+        'image.url',
+   
 
       ])
-      .getOne();
+      
+       queryBuilder .leftJoin('product.favoriteDetails', 'favoriteDetails','favoriteDetails.userId=:userId',{userId})
+        // .andWhere('favoriteDetails.userId=:userId', {userId})
+        .addSelect('favoriteDetails')
+
+    const product =  await queryBuilder.getOne()
 
     if (!product) {
       throw new NotFoundException('Product not exist');

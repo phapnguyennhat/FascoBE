@@ -83,7 +83,6 @@ export class ProductController {
   @Post(':id/valueAttr')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('image'))
-  //  TODO: DONE
   async createValueAttr(
     @Param() { id }: IdParam,
     @Body() createValueAttrDto: CreateValueAttrDto,
@@ -98,7 +97,7 @@ export class ProductController {
       id,
     );
     if (!attrProduct.hasImage) {
-      throw new BadRequestException('This Attr is not requered images');
+      throw new BadRequestException('This Attr is not required images');
     }
     try {
       await queryRunner.connect();
@@ -201,8 +200,8 @@ export class ProductController {
   }
 
   @Get(':id')
-  async findProductById(@Param() { id }: IdParam) {
-    return this.productService.findProductById(id);
+  async findProductById(@Param() { id }: IdParam, @Query() {userId}: {userId: string}) {
+    return this.productService.findProductById(id, userId);
   }
 }
 

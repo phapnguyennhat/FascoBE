@@ -7,8 +7,7 @@ import { Varient } from "./varient.entity";
 import { PatternEntity } from "src/common/patternEntity";
 import { Image } from "./image.entity";
 import { AttrProduct } from "./attrProduct.entity";
-
-
+import { FavoriteDetail } from "./favoriteDetail.entity";
 
 
 @Entity()
@@ -33,6 +32,9 @@ export class Product extends PatternEntity {
 
   @Column('decimal', { precision: 10, scale: 2 , nullable: true})
   price: number
+
+  @Column('decimal', { precision: 10, scale: 2 , nullable: true})
+  discountPrice: number;
 
   @Column()
   categoryName: string
@@ -65,4 +67,7 @@ export class Product extends PatternEntity {
 
   @OneToMany(()=>Image, (image: Image)=>image.product)
   images: Image[]
+
+  @OneToMany(()=>FavoriteDetail, ((favoriteDetail: FavoriteDetail)=>favoriteDetail.product))
+  favoriteDetails: FavoriteDetail[]
 }

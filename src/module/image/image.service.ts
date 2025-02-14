@@ -30,14 +30,17 @@ export class ImageService {
     if(queryRunner){
 
       const image: Image = await queryRunner.manager.findOneBy(Image,{id: imageId})
+      await  queryRunner.manager.delete(Image, imageId)
       await this.firebaseStorageService.deleteFile(image.key)
-      return  queryRunner.manager.delete(Image, imageId)
+    return {message: 'delete image successfully'}
+
     }
 
     const image: Image = await this.imageRepo.findOneBy({id: imageId})
+    await this.imageRepo.delete(imageId)
     await this.firebaseStorageService.deleteFile(image.key)
 
+    return {message: 'delete image successfully'}
    
-    return this.imageRepo.delete(imageId)
   }
 }

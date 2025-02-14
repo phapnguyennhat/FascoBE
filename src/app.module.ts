@@ -19,8 +19,10 @@ import { CartModule } from './module/cart/cart.module';
 import { ProvinceModule } from './module/province/province.module';
 import { DistrictModule } from './module/district/district.module';
 import { CommuneModule } from './module/commune/commune.module';
-import { AddressModule } from './address/address.module';
 import LogsMiddleware from './util/log.middleware';
+import { AddressModule } from './module/address/address.module';
+import { OrderModule } from './module/order/order.module';
+import { FavoriteModule } from './module/favorite/favorite.module';
 
 
 @Module({
@@ -44,6 +46,8 @@ import LogsMiddleware from './util/log.middleware';
     DistrictModule,
     CommuneModule,
     AddressModule,
+    OrderModule,
+    FavoriteModule,
    
   ],
   controllers: [AppController],

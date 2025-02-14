@@ -12,6 +12,12 @@ export enum AuthBy {
   LOCAL='LOCAL'
 }
 
+export enum EGender {
+  MALE= 'MALE',
+  FEMALE= 'FEMALE',
+  OTHER = 'OTHER'
+}
+
 export interface IAuthPayload {
   userId: string
 }
@@ -20,11 +26,14 @@ export interface IAuthPayload {
 export class User extends PatternEntity {
  
 
-  @Column()
+  @Column({nullable: true})
   name: string
 
   @Column({nullable: true})
   username: string
+
+  @Column({nullable: true})
+  phoneNumber: string
 
   @Column({nullable: true})
   @Exclude()
@@ -40,18 +49,18 @@ export class User extends PatternEntity {
   @Column( {enum:AuthBy, type: 'enum', default: AuthBy.LOCAL})
   authBy: AuthBy
 
+  @Column( {enum:EGender, type: 'enum', nullable: true})
+  gender: EGender
+
+  @Column({ type: 'date', nullable: true })
+  birthday: Date;
+
   @Column({nullable: true})
   avatarId: string
 
 
-  @OneToOne(()=> Image)
+  @OneToOne(()=> Image, {eager: true, onDelete: 'SET NULL'})
   @JoinColumn()
   avatar: Image
 
-  @Column({nullable: true})
-  addressId: string
-
-  @OneToOne(()=>Address)
-  @JoinColumn()
-  address: Address
 }

@@ -28,7 +28,6 @@ export class Varient extends  BaseEntity {
   @Column('decimal', { precision: 10, scale: 2 , nullable: true})
   discountPrice: number;
 
-  
   @ManyToOne(() => Product)
   product: Product;
 

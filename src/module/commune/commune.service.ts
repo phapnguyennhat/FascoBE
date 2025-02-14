@@ -10,8 +10,8 @@ export class CommuneService {
     private readonly communeRepo: Repository<Commune>,
   ) {}
 
-  async findById(id: string) {
-    const commune: Commune = await this.communeRepo.findOneBy({ id });
+  async findById(districtId: string,id: string) {
+    const commune: Commune = await this.communeRepo.findOneBy({ districtId,id });
     if (!commune) {
       throw new NotFoundException('Không tìm thấy xã phường ');
     }

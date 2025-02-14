@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthBy, User } from 'src/database/entity/user.entity';
-import { Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/createUser.dto';
 import { UpdateUserDto } from './dto/updateUser.dto';
 import { TokenPayload } from 'google-auth-library';
@@ -20,7 +20,10 @@ export class UserService {
     return this.userRepo.save(createUserDto);
   }
 
-  async update(userId: string, updateUserDto: UpdateUserDto) {
+  async update(userId: string, updateUserDto: UpdateUserDto, queryRunner?:QueryRunner) {
+    if(queryRunner){
+      return queryRunner.manager.update(User, userId, updateUserDto)
+    }
     return this.userRepo.update(userId, updateUserDto);
   }
 

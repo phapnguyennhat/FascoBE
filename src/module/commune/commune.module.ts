@@ -6,5 +6,6 @@ import { Commune } from 'src/database/entity/commune.entity';
 @Module({
   imports: [TypeOrmModule.forFeature([Commune])],
   providers: [CommuneService],
+  exports: [CommuneService]
 })
 export class CommuneModule {}

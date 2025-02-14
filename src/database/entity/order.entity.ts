@@ -12,25 +12,36 @@ export enum EStatusOrder {
   SHIPPING = 'SHIPPING',
 }
 
+
+export interface TotalOrder {
+ subTotal: number
+ wrap?: number
+ shipping?:number
+
+}
+
 @Entity()
 export class Order extends PatternEntity{
   @Column()
   userId: string
 
-  @Column()
-  addressId: string
+  @Column({
+    type: 'jsonb'
+  })
+  totalOrder: TotalOrder;
+  
 
   @Column({ default: EStatusOrder.PENDING, type: 'enum', enum: EStatusOrder })
   status: EStatusOrder;
 
-  @OneToMany(() => OrderItem, (orderItem: OrderItem) => orderItem.order)
+  @OneToMany(() => OrderItem, (orderItem: OrderItem) => orderItem.order, {cascade: true})
   orderItems: OrderItem[];
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, {onDelete: 'SET NULL'})
   user: User;
 
-  @OneToOne(()=>Address)
-  @JoinColumn()
+  @OneToOne(()=>Address, (address: Address)=>address.order, {cascade: true})
   address: Address
+
   
 }

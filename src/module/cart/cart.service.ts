@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CartItem } from 'src/database/entity/cartItem.entity';
-import { Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { CreateCartItem } from './dto/createCartItem.dto';
 import { UpdateCartItemDto } from './dto/updateCartItem.dto';
 
@@ -41,7 +41,15 @@ export class CartService {
       .innerJoin('varient.product', 'product')
       .innerJoin('varient.valueAttrs', 'valueAttrs')
       .innerJoin('valueAttrs.image', 'image')
-      .select(['cartItem.id','valueAttrs.value','valueAttrs.attrName','image.url', 'cartItem.quantity', 'product.name', 'product.id', 'varient.price','varient.pieceAvail'])
+      .select(['cartItem.id','cartItem.varientId','valueAttrs.value','valueAttrs.attrName','image.url', 'cartItem.quantity', 'product.name', 'product.id', 'varient.price','varient.pieceAvail'])
       .getMany();
+  }
+
+  async deleteByUserId(userId: string, queryRunner?:QueryRunner){
+    if(queryRunner){
+     return queryRunner.manager.delete(CartItem,{userId})
+    }
+    return this.cartItemRepo.delete({userId})
+
   }
 }
