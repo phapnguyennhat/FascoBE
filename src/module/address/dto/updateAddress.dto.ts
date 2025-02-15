@@ -3,11 +3,11 @@ import { IsOptional, IsPhoneNumber, IsString } from "class-validator";
 export class UpdateAddressDto {
   @IsString()
   @IsOptional()
-  firstName :string
+  fullName :string
 
-  @IsString()
-  @IsOptional()
-  lastName: string
+  // @IsString()
+  // @IsOptional()
+  // lastName: string
 
   @IsPhoneNumber()
   @IsOptional()

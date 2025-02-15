@@ -23,6 +23,7 @@ import LogsMiddleware from './util/log.middleware';
 import { AddressModule } from './module/address/address.module';
 import { OrderModule } from './module/order/order.module';
 import { FavoriteModule } from './module/favorite/favorite.module';
+import { CategoryModule } from './module/category/category.module';
 
 
 @Module({
@@ -48,6 +49,7 @@ import { FavoriteModule } from './module/favorite/favorite.module';
     AddressModule,
     OrderModule,
     FavoriteModule,
+    CategoryModule,
    
   ],
   controllers: [AppController],

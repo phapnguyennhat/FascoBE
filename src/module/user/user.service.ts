@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,6 +9,7 @@ import { UpdateUserDto } from './dto/updateUser.dto';
 import { TokenPayload } from 'google-auth-library';
 import * as bcrypt from 'bcrypt'
 import { Profile } from '../facebook-auth/response/profile';
+import { UpdatePasswordDto } from '../auth/dto/updatePassword.dto';
 
 @Injectable()
 export class UserService {
@@ -76,6 +77,17 @@ export class UserService {
     if (isRefreshTokenMatching) {
       return user;
     }
+  }
+
+  async updatePassword (userId: string, updatePasswordDto: UpdatePasswordDto){
+    const user : User = await this.userRepo.findOneBy({id:userId})
+        const isPasswordMatching = await bcrypt.compare(updatePasswordDto.password, user.password);
+    if(!isPasswordMatching){
+      throw new BadRequestException('Password is not correct')
+    }
+    const hashedPassword = await bcrypt.hash(updatePasswordDto.new_password, 10);
+    
+    return this.userRepo.update({id: userId}, {password: hashedPassword})
   }
   
 }

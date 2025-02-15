@@ -3,12 +3,12 @@ import { IsEmail, IsNotEmpty, IsPhoneNumber, IsString } from "class-validator"
 export class CreateAddressDto {
   @IsString()
   @IsNotEmpty()
-  firstName :string
+  fullName :string
 
   
-  @IsString()
-  @IsNotEmpty()
-  lastName: string
+  // @IsString()
+  // @IsNotEmpty()
+  // lastName: string
   
   @IsNotEmpty()
   @IsEmail()

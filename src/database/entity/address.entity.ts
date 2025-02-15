@@ -18,11 +18,14 @@ export class Address extends PatternEntity {
   @Column({nullable: true})
   orderId: string
 
-  @Column()
-  firstName: string
+  // @Column()
+  // firstName: string
 
+  // @Column()
+  // lastName: string
+  
   @Column()
-  lastName: string
+  fullName: string
 
   @Column()
   phoneNumber: string;

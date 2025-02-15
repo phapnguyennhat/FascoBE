@@ -43,7 +43,7 @@ export class AuthService {
 
     const isPasswordMatching = await bcrypt.compare(password, user.password);
     if (!isPasswordMatching) {
-      return null;
+    return null;
     }
     return user;
   }

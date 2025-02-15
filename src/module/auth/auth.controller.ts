@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, HttpCode, HttpStatus, Post, Put, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UserService } from '../user/user.service';
 import { RegisterDto } from './dto/register.dto';
@@ -6,6 +6,7 @@ import * as bcrypt from 'bcrypt'
 import JwtAuthGuard from './guard/jwt-auth.guard';
 import JwtRefreshGuard from './guard/jwtRefresh.guard';
 import { LocalAuthGuard } from './guard/local-auth.guard';
+import { UpdatePasswordDto } from './dto/updatePassword.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -60,5 +61,20 @@ export class AuthController {
 
     req.res.setHeader('Set-Cookie', accessTokenCookie.cookie);
     return accessTokenCookie;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('change-password')
+  async changePassword (@Req() req, @Body()updatePasswordDto: UpdatePasswordDto){
+     const {password,confirm_password, new_password} = updatePasswordDto
+    if(confirm_password!== new_password){
+      throw new BadRequestException('Confirm password must match new password')
+    }
+
+    if(password === new_password){
+      throw new BadRequestException('New password must  be different from the old password ')
+    }
+    
+    return this.userService.updatePassword(req.user.id, updatePasswordDto)
   }
 }
