@@ -5,12 +5,15 @@ import { Request } from 'express';
 import { CreateCartItemDto } from './dto/createCartItem.dto';
 import { UpdateCartItemDto } from './dto/updateCartItem.dto';
 import { IdParam } from 'src/common/validate';
+import RoleGuard from '../auth/guard/role.guard';
+import { ERole } from 'src/database/entity/user.entity';
 
 @Controller('cart')
 export class CartController {
   constructor(private readonly cartService: CartService) {}
 
   @Post()
+  @UseGuards(RoleGuard(ERole.USER))
   @UseGuards(JwtAuthGuard)
   async createCartItem (@Req() req, @Body() createCartItemDto: CreateCartItemDto){
     return this.cartService.createCartItem({...createCartItemDto, userId: req.user.id})

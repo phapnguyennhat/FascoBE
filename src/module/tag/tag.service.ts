@@ -13,6 +13,10 @@ export class TagService {
 
   async find(query:QueryParam){
     const {page, limit} = query
+    
+    if(!page ||!limit){
+      return this.tagRepo.find()
+    }
 
     return this.tagRepo.find({
       skip: (page - 1) * limit,

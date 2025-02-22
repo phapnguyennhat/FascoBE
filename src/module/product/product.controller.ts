@@ -36,6 +36,9 @@ import { QueryProductDto } from './dto/queryProduct';
 import { hasDuplicateAttrName } from 'src/util/hasDuplicateAttrName';
 import { SearchParams } from 'src/common/searchParams';
 import { Product } from 'src/database/entity/product.entity';
+import RoleGuard from '../auth/guard/role.guard';
+import { ERole } from 'src/database/entity/user.entity';
+import { stringValueIdsDto } from './dto/stringValueIds.dto';
 
 @Controller('product')
 export class ProductController {
@@ -46,12 +49,14 @@ export class ProductController {
   ) {}
 
   @Post('')
+  @UseGuards(RoleGuard(ERole.ADMIN))
   @UseGuards(JwtAuthGuard)
   create(@Req() req, @Body() createProductDto: CreateProductDto) {
     return this.productService.create(req.user.id, createProductDto);
   }
 
   @Post(':id/image')
+  @UseGuards(RoleGuard(ERole.ADMIN))
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor('images'))
   async createImagesProduct(
@@ -62,11 +67,33 @@ export class ProductController {
       throw new BadRequestException('Images is required');
     }
 
-    await Promise.all(files.map((file) => this.imageService.create(file, id)));
+    await this.productService.findById(id)
+
+    const productImages = await this.imageService.findByProductId(id) || []
+
+    const queryRunner =this.dataSource.createQueryRunner()
+
+    try {
+      await queryRunner.connect()
+      await queryRunner.startTransaction()
+
+      await Promise.all([productImages.map(item => this.imageService.delete(item.id), queryRunner)])
+      await Promise.all(files.map((file) => this.imageService.create(file, id, queryRunner)));
+
+
+      await queryRunner.commitTransaction()
+    } catch (error) {
+      await queryRunner.rollbackTransaction()
+      throw error
+    } finally{
+      await queryRunner.release()
+    }
+
     return { message: 'upload images successfully' };
   }
 
   @Post(':id/attrProduct')
+  @UseGuards(RoleGuard(ERole.ADMIN))
   @UseGuards(JwtAuthGuard)
   createAttrProduct(
     @Param() { id }: IdParam,
@@ -80,61 +107,124 @@ export class ProductController {
     return this.productService.createAttr(createAttrProducts);
   }
 
-  @Post(':id/valueAttr')
+  // @Post(':id/valueAttr')
+  // @UseGuards(JwtAuthGuard)
+  // @UseInterceptors(FileInterceptor('image'))
+  // async createValueAttr(
+  //   @Param() { id }: IdParam,
+  //   @Body() createValueAttrDto: CreateValueAttrDto,
+  //   @UploadedFile() file: Express.Multer.File,
+  // ) {
+  //   const queryRunner = this.dataSource.createQueryRunner();
+  //   if (!file) {
+  //     throw new BadRequestException('Images is required');
+  //   }
+  //   const attrProduct = await this.productService.findAttrByNameAndProductId(
+  //     createValueAttrDto.attrName,
+  //     id,
+  //   );
+  //   if (!attrProduct.hasImage) {
+  //     throw new BadRequestException('This Attr is not required images');
+  //   }
+  //   try {
+  //     await queryRunner.connect();
+  //     await queryRunner.startTransaction();
+
+  //     const new_image = await this.imageService.create(
+  //       file,
+  //       undefined,
+  //       queryRunner,
+  //     );
+  //     const new_valueAttr = await this.productService.createValueAttr(
+  //       {
+  //         ...createValueAttrDto,
+  //         productId: id,
+  //         imageId: new_image.id,
+  //       },
+  //       queryRunner,
+  //     );
+
+  //     await queryRunner.commitTransaction();
+  //     return { message: 'create successfully' };
+  //   } catch (error) {
+  //     await queryRunner.rollbackTransaction();
+  //     throw error;
+  //   } finally {
+  //     queryRunner.release();
+  //   }
+  // }
+
+  @Post(':id/valueAttr/image')
+  @UseGuards(RoleGuard(ERole.ADMIN))
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('image'))
-  async createValueAttr(
-    @Param() { id }: IdParam,
-    @Body() createValueAttrDto: CreateValueAttrDto,
-    @UploadedFile() file: Express.Multer.File,
+  @UseInterceptors(FilesInterceptor('images'))
+  async createValueImages (
+    @UploadedFiles() files: Express.Multer.File[],
+    @Param() {id}: IdParam,
+    @Body() {stringvalueIds}: stringValueIdsDto
   ) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    if (!file) {
+
+    if (files.length === 0) {
       throw new BadRequestException('Images is required');
     }
-    const attrProduct = await this.productService.findAttrByNameAndProductId(
-      createValueAttrDto.attrName,
-      id,
-    );
-    if (!attrProduct.hasImage) {
-      throw new BadRequestException('This Attr is not required images');
+
+    console.log({stringvalueIds})
+    
+    const valueIds : string[] = stringvalueIds.split(',')
+    const valueAttrs= await this.productService.findValueHasImageByIdsJoinAttr(id, valueIds)
+    if(valueAttrs.length !== files.length){
+      throw new BadRequestException('value missing image')
     }
+
+    const queryRunner = this.dataSource.createQueryRunner()
+
     try {
-      await queryRunner.connect();
-      await queryRunner.startTransaction();
+      await queryRunner.connect()
+      await queryRunner.startTransaction()
 
-      const new_image = await this.imageService.create(
-        file,
-        undefined,
-        queryRunner,
-      );
-      const new_valueAttr = await this.productService.createValueAttr(
-        {
-          ...createValueAttrDto,
-          productId: id,
-          imageId: new_image.id,
-        },
-        queryRunner,
+      await Promise.all(
+        files.map( async(file, index) => {
+         const newFile = await this.imageService.create(file, undefined, queryRunner);
+         const attrValue = valueAttrs[index]
+         if (attrValue.imageId){
+          await this.imageService.delete(attrValue.imageId, queryRunner)
+         }
+         await this.productService.updateAttrValue(attrValue.id,{imageId: newFile.id}, queryRunner)
+        }),
       );
 
-      await queryRunner.commitTransaction();
-      return { message: 'create successfully' };
+      await queryRunner.commitTransaction()
+      return {message: 'Upload Value Image successfully'}
     } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      queryRunner.release();
+      await queryRunner.rollbackTransaction()
+      throw error
+      
+    }finally{
+      await queryRunner.release()
     }
+
   }
 
-  @Post(':id/abulk/valueAttr')
+
+  @Post(':id/valueAttr')
+  @UseGuards(RoleGuard(ERole.ADMIN))
   @UseGuards(JwtAuthGuard)
   async createAbulkValueAttr(
     @Param() { id }: IdParam,
     @Body() createAbulkValueAttrDto: CreateAbulkValueAttrDto,
   ) {
+
+    const {createValueAttrDtos} = createAbulkValueAttrDto
+
+    const setAttrName = new Set(createValueAttrDtos.map(item => item.attrName));
+    const productAttrs = await this.productService.findAttrByProductId(id)
+    
+    if( productAttrs.length !== setAttrName.size ){
+      throw new BadRequestException('These are attributes missing values')
+    }
+
     const createValueAttrs: CreateValueAttr[] =
-      createAbulkValueAttrDto.createValueAttrDtos.map((item) => ({
+      createValueAttrDtos.map((item) => ({
         ...item,
         productId: id,
       }));
@@ -203,6 +293,8 @@ export class ProductController {
   async findProductById(@Param() { id }: IdParam, @Query() {userId}: {userId: string}) {
     return this.productService.findProductById(id, userId);
   }
+
+  
 }
 
 

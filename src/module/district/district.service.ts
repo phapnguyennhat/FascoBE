@@ -15,6 +15,7 @@ export class DistrictService {
       relations: {
         communes: true,
       },
+     
     });
     if (!district) {
       throw new NotFoundException('Không tìm thấy quận/huyện');

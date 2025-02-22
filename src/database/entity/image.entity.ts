@@ -17,6 +17,5 @@ export class Image extends PatternEntity {
 
   @ManyToOne(()=> Product)
   product: Product
-
 }
 

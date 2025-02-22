@@ -20,6 +20,10 @@ export class AddressService {
     return this.addressRepo.update({userId, id}, updateAddressDto)
   }
 
+  async updateAddressOrder(orderId: string, id: string, updateAddressDto: UpdateAddressDto){
+    return this.addressRepo.update({id, orderId}, updateAddressDto)
+  }
+
   async findByUserId(userId: string){
     return this.addressRepo.findOne({where: {userId}, relations: {
       province: true,
@@ -27,4 +31,6 @@ export class AddressService {
       commune: true
     }})
   }
+
+
 }

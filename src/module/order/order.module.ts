@@ -8,6 +8,7 @@ import { OrderItem } from 'src/database/entity/orderItem.entity';
 import { ProvinceModule } from '../province/province.module';
 import { DistrictModule } from '../district/district.module';
 import { CommuneModule } from '../commune/commune.module';
+import { AddressModule } from '../address/address.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { CommuneModule } from '../commune/commune.module';
     ProvinceModule,
     DistrictModule,
     CommuneModule,
+    AddressModule
   ],
   controllers: [OrderController],
   providers: [OrderService],

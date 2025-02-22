@@ -31,6 +31,5 @@ export class AddressController {
   async updateAddress(@Req() req, @Param() {id}: IdParam, @Body() updateAddressDto: UpdateAddressDto){
     return this.addressService.updateAddress(req.user.id, id, updateAddressDto)
   }
-
 }
 

@@ -18,6 +18,11 @@ export enum EGender {
   OTHER = 'OTHER'
 }
 
+export enum ERole {
+  ADMIN= 'ADMIN',
+  USER='USER'
+}
+
 export interface IAuthPayload {
   userId: string
 }
@@ -48,6 +53,9 @@ export class User extends PatternEntity {
 
   @Column( {enum:AuthBy, type: 'enum', default: AuthBy.LOCAL})
   authBy: AuthBy
+
+  @Column( {enum:ERole, type: 'enum', default: ERole.USER})
+  role: ERole
 
   @Column( {enum:EGender, type: 'enum', nullable: true})
   gender: EGender

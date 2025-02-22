@@ -23,6 +23,7 @@ import { ECollection, QueryProductDto } from './dto/queryProduct';
 import { VarientValue } from 'src/database/entity/varient_value.entity';
 import { SearchParams } from 'src/common/searchParams';
 import { string } from 'joi';
+import { UpdateAttrValue } from './dto/updateValueDto';
 
 @Injectable()
 export class ProductService {
@@ -82,6 +83,13 @@ export class ProductService {
     return this.productRepo.update(productId, updateProductDto);
   }
 
+  async updateAttrValue(id: string,updateAttrValue: UpdateAttrValue, queryRunner?: QueryRunner){
+    if(queryRunner){
+      return queryRunner.manager.update(ValueAttr,id, updateAttrValue )
+    }
+    return this.valueAttrRepo.update(id, updateAttrValue)
+  }
+
   async findById(productId: string) {
     const product: Product = await this.productRepo.findOneBy({
       id: productId,
@@ -93,9 +101,10 @@ export class ProductService {
   }
 
   async findProduct(queryProduct: QueryProductDto) {
-    const {
+    let {
       page,
       limit,
+      keyword,
       brandName,
       categoryName,
       collection,
@@ -104,6 +113,9 @@ export class ProductService {
       tag,
       size,
     } = queryProduct;
+    
+    page = page ||1
+    limit = limit ||9
     const queryBuilder = this.productRepo
       .createQueryBuilder('product')
       .innerJoin('product.user', 'user')
@@ -113,12 +125,19 @@ export class ProductService {
         'product.name',
         'product.price',
         'product.pieceAvail',
+        'product.createAt',
+        'product.sold',
         'product.reviewNumber',
         'user.name',
         'images.url',
       ])
-      .skip((page - 1) * limit)
-      .take(limit);
+      .andWhere('product.price IS NOT NULL')
+      .skip((page  - 1) * limit )
+      .take(limit ||9);
+
+      if(keyword){
+        queryBuilder.andWhere('product.name ILIKE :keyword', { keyword: `%${keyword}%` });
+      }
 
     if (size) {
       queryBuilder
@@ -144,7 +163,9 @@ export class ProductService {
 
     // Thêm điều kiện cho brandName (nếu có)
     if (brandName) {
-      queryBuilder.andWhere('product.brandName = :brandName', {
+      queryBuilder
+      .innerJoin('product.brand', 'brand')
+      .andWhere('brand.name = :brandName', {
         brandName,
       });
     }
@@ -172,7 +193,7 @@ export class ProductService {
           queryBuilder.orderBy('product.sold', 'DESC');
           break;
         case ECollection.NEWARRIVAL:
-          queryBuilder.orderBy('product.createdAt', 'DESC');
+          queryBuilder.orderBy('product.createAt', 'DESC');
           break;
         case ECollection.LOWTOHIGH:
           queryBuilder.orderBy('product.price', 'ASC');
@@ -206,6 +227,21 @@ export class ProductService {
     return this.valueAttrRepo.findOneBy({ id: valueAttrId });
   }
 
+  async findValueHasImageByIdsJoinAttr (productId: string,valueIds: string[]){
+    const queryBuilder = this.valueAttrRepo
+      .createQueryBuilder('valueAttr')
+      .innerJoin(
+        'valueAttr.attrProduct',
+        'attrProduct',
+        'attrProduct.hasImage = true',
+      )
+      .andWhere('valueAttr.productId =:productId', {productId})
+      .andWhere('valueAttr.id IN (:...valueIds)', { valueIds })
+      .select(['valueAttr']);
+    return queryBuilder.getMany()
+
+  }
+
 
 
   async findProductById(productId: string, userId?:string) {
@@ -235,6 +271,8 @@ export class ProductService {
    
 
       ])
+
+      
       
        queryBuilder .leftJoin('product.favoriteDetails', 'favoriteDetails','favoriteDetails.userId=:userId',{userId})
         // .andWhere('favoriteDetails.userId=:userId', {userId})

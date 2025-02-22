@@ -15,7 +15,7 @@ import { FavoriteDetail } from "./favoriteDetail.entity";
 
 export class Product extends PatternEntity {
 
-  @Column()
+  @Column({unique: true})
   name: string;
 
   @Column({ type: 'decimal', precision: 2, scale: 1, default: 5 })
@@ -39,7 +39,7 @@ export class Product extends PatternEntity {
   @Column()
   categoryName: string
 
-  @OneToOne(()=>Category, )
+  @ManyToOne(()=>Category, )
   @JoinColumn()
   category: Category
 
@@ -47,11 +47,14 @@ export class Product extends PatternEntity {
   @JoinTable({name: 'product_tag'})
   tags: Tag[]
 
-  @Column()
-  brandName: string
+
+
+  @Column({nullable: true})
+  brandId: string
 
   @ManyToOne(()=>Brand)
   brand: Brand
+
 
   @Column()
   userId: string
@@ -70,4 +73,6 @@ export class Product extends PatternEntity {
 
   @OneToMany(()=>FavoriteDetail, ((favoriteDetail: FavoriteDetail)=>favoriteDetail.product))
   favoriteDetails: FavoriteDetail[]
+
+
 }

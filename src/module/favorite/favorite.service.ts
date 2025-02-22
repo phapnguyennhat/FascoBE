@@ -17,7 +17,9 @@ export class FavoriteService {
   }
 
   async findByUser(userId: string, queryFavoriteDto: QueryFavoriteDto){
-    const {page, limit, status,discount, category} = queryFavoriteDto
+    let {page, limit, status,discount, category} = queryFavoriteDto
+    page=page ||1
+    limit=limit || 9
     const queryBuilder = this.favoriteDetailRepo
       .createQueryBuilder('favoriteDetail')
       .innerJoin('favoriteDetail.product', 'product')

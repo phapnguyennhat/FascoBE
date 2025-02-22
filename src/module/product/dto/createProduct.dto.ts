@@ -5,7 +5,7 @@ import { Tag } from "src/database/entity/tag.entity";
 export class CreateProductDto{
   @IsString()
   @IsNotEmpty()
-  @MinLength(10)
+  @MinLength(3)
   name: string
 
   @IsNotEmpty()
@@ -20,7 +20,7 @@ export class CreateProductDto{
 
   @IsString()
   @IsNotEmpty()
-  brandName: string
+  brandId: string
 }
 
 export class CreateProduct extends CreateProductDto{

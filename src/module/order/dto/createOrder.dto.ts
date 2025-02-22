@@ -12,6 +12,7 @@ export class CreateOrderDto {
   @ValidateNested()
   address: CreateAddressDto
 
+  @Type(()=>Boolean)
   @IsBoolean()
   @IsNotEmpty()
   isWrap: boolean

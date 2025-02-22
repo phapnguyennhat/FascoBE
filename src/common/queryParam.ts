@@ -7,12 +7,12 @@ export class QueryParam {
   @IsOptional()
   @IsPositive()
   @Min(1)
-  page: number=1
+  page: number
 
   @Type(()=>Number)
   @IsNumber()
   @IsOptional()
   @IsPositive()
   @Min(5)
-  limit: number =6
+  limit: number
 }

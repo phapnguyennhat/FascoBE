@@ -13,14 +13,18 @@ import {
 import { QueryParam } from 'src/common/queryParam';
 
 export enum ECollection {
-  ALLPRODUCT = 'ALLPRODUCT',
-  BESTSELLER = 'BESTSELLER',
-  NEWARRIVAL = 'NEWARRIVAL',
-  LOWTOHIGH = 'LOWTOHIGH',
-  HIGHTOLOW = 'HIGHTOLOW',
+  ALLPRODUCT = 'All Products',
+  BESTSELLER = 'Best Seller',
+  NEWARRIVAL = 'New Arrivals',
+  LOWTOHIGH = 'Price: Low to High',
+  HIGHTOLOW = 'Price: High to Low',
 }
 
 export class QueryProductDto  extends QueryParam {
+
+  @IsOptional()
+  @IsString()
+  keyword: string
   
   @IsOptional()
   @IsString()

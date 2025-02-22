@@ -26,14 +26,20 @@ export class ImageService {
     return this.imageRepo.save({...result, productId})
   }
 
+  async findByProductId(productId: string) {
+    return this.imageRepo.findBy({productId}) 
+  }
+
   async delete(imageId:string, queryRunner?: QueryRunner){
+    if(!imageId){
+      return
+    }
     if(queryRunner){
 
       const image: Image = await queryRunner.manager.findOneBy(Image,{id: imageId})
       await  queryRunner.manager.delete(Image, imageId)
       await this.firebaseStorageService.deleteFile(image.key)
-    return {message: 'delete image successfully'}
-
+      return {message: 'delete image successfully'}
     }
 
     const image: Image = await this.imageRepo.findOneBy({id: imageId})

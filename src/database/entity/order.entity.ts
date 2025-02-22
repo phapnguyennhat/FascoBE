@@ -3,13 +3,14 @@ import { PatternEntity } from "src/common/patternEntity";
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from "typeorm";
 import { OrderItem } from "./orderItem.entity";
 import { User } from "./user.entity";
+import { Exclude } from 'class-transformer';
 
 
 export enum EStatusOrder {
-  PENDING = 'PENDING',
-  COMPLETE = 'COMPLETE',
-  CANCEL = 'CANCEL',
-  SHIPPING = 'SHIPPING',
+  PENDING = 'pending',
+  COMPLETE = 'complete',
+  CANCEL = 'cancel',
+  SHIPPING = 'shipping',
 }
 
 
@@ -23,6 +24,7 @@ export interface TotalOrder {
 @Entity()
 export class Order extends PatternEntity{
   @Column()
+  @Exclude()
   userId: string
 
   @Column({

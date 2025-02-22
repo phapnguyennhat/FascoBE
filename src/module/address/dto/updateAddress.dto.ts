@@ -1,13 +1,15 @@
-import { IsOptional, IsPhoneNumber, IsString } from "class-validator";
+import { IsEmail, IsOptional, IsPhoneNumber, IsString } from "class-validator";
 
 export class UpdateAddressDto {
   @IsString()
   @IsOptional()
   fullName :string
 
-  // @IsString()
-  // @IsOptional()
-  // lastName: string
+  @IsEmail()
+  @IsOptional()
+  email: string
+
+
 
   @IsPhoneNumber()
   @IsOptional()
@@ -24,4 +26,8 @@ export class UpdateAddressDto {
   @IsOptional()
   @IsString()
   communeId: string
+
+  @IsOptional()
+  @IsString()
+  street: string
 }
