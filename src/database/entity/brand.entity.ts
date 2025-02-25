@@ -11,7 +11,7 @@ export class Brand extends PatternEntity {
 
   imageId: string
 
-  @OneToOne(()=>Image,{eager: true})
+  @OneToOne(()=>Image,{eager: true, onDelete: 'SET NULL'})
   @JoinColumn()
   image: Image
 

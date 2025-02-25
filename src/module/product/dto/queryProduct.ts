@@ -18,6 +18,7 @@ export enum ECollection {
   NEWARRIVAL = 'New Arrivals',
   LOWTOHIGH = 'Price: Low to High',
   HIGHTOLOW = 'Price: High to Low',
+  DEALS = 'Deals'
 }
 
 export class QueryProductDto  extends QueryParam {

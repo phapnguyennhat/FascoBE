@@ -28,3 +28,4 @@ export class FavoriteController {
     return this.favoriteService.findByUser(req.user.id, queryFavoriteDto)
   }
 }
+

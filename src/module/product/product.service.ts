@@ -10,20 +10,18 @@ import { Any, In, QueryRunner, Repository } from 'typeorm';
 import { CreateProduct, CreateProductDto } from './dto/createProduct.dto';
 import { UpdateProductDto } from './dto/updateProduct.dto';
 import { AttrProduct } from 'src/database/entity/attrProduct.entity';
-import {
-  CreateAttrProduct,
-  CreateAttrProductDtos,
-} from './dto/createAttrProduct.dto';
+
 import { ValueAttr } from 'src/database/entity/valueAttr.entity';
 import { Varient } from 'src/database/entity/varient.entity';
 import { CreateVarient, CreateVarientDto } from './dto/createVarient.dto';
-import { CreateValueAttr } from './dto/createValueAttr.dto';
 import { Tag } from 'src/database/entity/tag.entity';
 import { ECollection, QueryProductDto } from './dto/queryProduct';
 import { VarientValue } from 'src/database/entity/varient_value.entity';
 import { SearchParams } from 'src/common/searchParams';
-import { string } from 'joi';
-import { UpdateAttrValue } from './dto/updateValueDto';
+import { Cron } from '@nestjs/schedule';
+import { UpdateValueAttr, UpdateValueAttrDto } from './dto/updateValueAttr.dto';
+import { UpdateOrderDto } from '../order/dto/updateOrder.dto';
+import { UpdateAttrProductDto } from './dto/updateAttrProduct.dto';
 
 @Injectable()
 export class ProductService {
@@ -41,63 +39,35 @@ export class ProductService {
     private readonly varientValueRepo: Repository<VarientValue>,
   ) {}
 
-  async create(userId: string, createProductDto: CreateProductDto) {
-    // return this.productRepo.save(createProduct)
-    const tags: Tag[] = await this.tagRepo.find({
-      where: { name: In(createProductDto.tagNames) },
-    });
-    const createProduct: CreateProduct = { ...createProductDto, userId, tags };
-    return this.productRepo.save(createProduct);
-  }
-
-  async createAttr(createAttrProducts: CreateAttrProduct[]) {
-    return this.attrProductRepo.insert(createAttrProducts);
-  }
-
-  async createValueAttr(
-    createValueAttr: CreateValueAttr,
-    queryRunner?: QueryRunner,
-  ) {
-    if (queryRunner) {
-      return queryRunner.manager.save(ValueAttr, createValueAttr);
-    }
-    return this.valueAttrRepo.save(createValueAttr);
-  }
-
-  async createAbulkValueAttr(createValueAttrs: CreateValueAttr[]) {
-    return this.valueAttrRepo.insert(createValueAttrs);
-  }
-
-  async createVarient(createVarient: CreateVarient) {
-    return this.varientRepo.save(createVarient);
-  }
-
-  async update(
-    productId: string,
-    updateProductDto: UpdateProductDto,
-    queryRunner?: QueryRunner,
-  ) {
-    if (queryRunner) {
-      return queryRunner.manager.update(Product, productId, updateProductDto);
-    }
-    return this.productRepo.update(productId, updateProductDto);
-  }
-
-  async updateAttrValue(id: string,updateAttrValue: UpdateAttrValue, queryRunner?: QueryRunner){
+  async create(createProduct: CreateProduct, queryRunner?:QueryRunner) {
     if(queryRunner){
-      return queryRunner.manager.update(ValueAttr,id, updateAttrValue )
+      return queryRunner.manager.save(Product, createProduct)
     }
-    return this.valueAttrRepo.update(id, updateAttrValue)
+    return this.productRepo.save(createProduct)
   }
 
-  async findById(productId: string) {
-    const product: Product = await this.productRepo.findOneBy({
-      id: productId,
-    });
-    if (!product) {
-      throw new NotFoundException('Product doesnt exist');
+
+
+  async updateAttrValue(id: string,updateValueAttr: UpdateValueAttr, queryRunner?: QueryRunner){
+    const valueAttr = await this.getValueById(id, queryRunner)
+    Object.assign(valueAttr, updateValueAttr)
+    if(queryRunner){
+      return queryRunner.manager.save(ValueAttr, valueAttr )
     }
-    return product;
+    return this.valueAttrRepo.save(valueAttr)
+  }
+
+  async getValueById(id: string, queryRunner?:QueryRunner){
+    let valueAttr: ValueAttr | undefined= undefined
+    if(queryRunner){
+      valueAttr = await queryRunner.manager.findOneBy(ValueAttr, {id})
+    }else{
+      valueAttr = await this.valueAttrRepo.findOneBy({id})
+    }
+    if(!valueAttr){
+      throw new NotFoundException('Not found attr value')
+    }
+    return valueAttr
   }
 
   async findProduct(queryProduct: QueryProductDto) {
@@ -125,6 +95,7 @@ export class ProductService {
         'product.name',
         'product.price',
         'product.pieceAvail',
+        'product.discountPrice',
         'product.createAt',
         'product.sold',
         'product.reviewNumber',
@@ -143,7 +114,7 @@ export class ProductService {
       queryBuilder
         .innerJoin('product.attrProducts', 'attrProducts')
         .innerJoin('attrProducts.valueAttrs', 'valueAttrs')
-        .andWhere("valueAttrs.attrName='Size' ")
+        .andWhere("attrProducts.name='Size' ")
         .andWhere('valueAttrs.value = :size', { size });
     }
 
@@ -201,6 +172,9 @@ export class ProductService {
         case ECollection.HIGHTOLOW:
           queryBuilder.orderBy('product.price', 'DESC');
           break;
+        case ECollection.DEALS:
+          queryBuilder.andWhere('product.discountPrice IS NOT NULL')
+          .andWhere('product.discountPrice >0')
       }
     }
     // Execute the query
@@ -223,8 +197,36 @@ export class ProductService {
     return this.attrProductRepo.findBy({ productId });
   }
 
-  async findValueById(valueAttrId) {
-    return this.valueAttrRepo.findOneBy({ id: valueAttrId });
+  async findValueByNamesAndProductId(attrValueNames: string[], productId: string, queryRunner?:QueryRunner){
+    if(queryRunner){
+      const queryBuilder = this.valueAttrRepo.createQueryBuilder('valueAttr', queryRunner)
+      .innerJoin('valueAttr.attrProduct', 'attrProduct', 'attrProduct.productId = :productId', {productId})
+      .andWhere('valueAttr.value IN (:...attrValueNames)', { attrValueNames })
+      .distinctOn(['attrProduct.name'])
+      .select(['valueAttr', 'attrProduct.name'])
+      
+      return queryBuilder.getMany()
+    }
+  }
+
+  async findValueHasImageByProductId(productId: string){
+    const queryBuilder = this.valueAttrRepo.createQueryBuilder('valueAttr')
+    .innerJoin('valueAttr.attrProduct', 'attrProduct', 'attrProduct.productId = :productId', {productId})
+    .andWhere('attrProduct.hasImage = true')
+
+    return queryBuilder.getMany()
+  }
+
+
+  async findValueByNameAndProductId(value: string, productId: string){
+    const queryBuilder = this.valueAttrRepo.createQueryBuilder('valueAttr')
+    .innerJoin('valueAttr.attrProduct', 'attrProduct', 'attrProduct.productId = :productId', {productId})
+    .andWhere('valueAttr.value =:value', {value})
+    const valueAttr= await queryBuilder.getOne()
+    if(!valueAttr){
+      throw new NotFoundException(`Not found value ${value}`)
+    }
+    return valueAttr
   }
 
   async findValueHasImageByIdsJoinAttr (productId: string,valueIds: string[]){
@@ -247,7 +249,7 @@ export class ProductService {
   async findProductById(productId: string, userId?:string) {
     const queryBuilder = this.productRepo
       .createQueryBuilder('product')
-      .innerJoin('product.images', 'images')
+      .leftJoin('product.images', 'images')
       .innerJoin('product.attrProducts', 'attrProducts')
       .innerJoin('attrProducts.valueAttrs', 'valueAttrs')
       .leftJoin('valueAttrs.image', 'image')
@@ -262,14 +264,15 @@ export class ProductService {
         'product.sold',
         'product.pieceAvail',
         'product.price',
+        'attrProducts.id',
         'attrProducts.name',
+        'attrProducts.hasImage',
         'valueAttrs.value',
         'valueAttrs.id',
         'images.id',
         'images.url',
+        'image.id',
         'image.url',
-   
-
       ])
 
       
@@ -286,44 +289,8 @@ export class ProductService {
     return product;
   }
 
-  async findValueByIdsAndProductId(valueAttrIds: string[], productId: string) {
-    return this.valueAttrRepo.find({
-      where: {
-        id: In(valueAttrIds),
-        productId,
-      },
-    });
-  }
 
-  async findValueAttrByProductId(productId: string) {
-    return this.valueAttrRepo.findBy({ productId });
-  }
 
-  async findVarientById(varientId: string) {
-    const varient: Varient = await this.varientRepo.findOneBy({
-      id: varientId,
-    });
-    if (!varient) {
-      throw new NotFoundException('Not found varient');
-    }
-    return varient;
-  }
-
-  async getValueAttrIds(searchParams: SearchParams, productId: string) {
-    const valueAttrIds = await Promise.all(  
-      Object.entries(searchParams).map(async ([key, value]) => {
-        const valueAttr = await this.valueAttrRepo.findOneBy({
-          attrName: key,
-          value: value as string,
-          productId,
-        });
-        
-        return valueAttr?.id
-      })
-    );
-  
-    return valueAttrIds.filter((id): id is string => id !== undefined);
-  }
 
   async findVarientByValueIds(valueAttrIds: string[]) {
     const varientIds: { varientId: string }[] = await this.varientValueRepo
@@ -342,10 +309,38 @@ export class ProductService {
     return this.varientRepo.findOneBy({ id: varientIds[0].varientId });
   }
 
-  async delete(productId: string, queryRunner?: QueryRunner) {
-    if (queryRunner) {
-      return queryRunner.manager.delete(Product, productId);
+  async deleteValueAttr(id: string, queryRunner?:QueryRunner){
+    if(queryRunner){
+      return queryRunner.manager.delete(ValueAttr,id)
     }
-    return this.productRepo.delete(productId);
+    return this.valueAttrRepo.delete(id)
+  }
+
+  async deleteAttrProduct(id: string, queryRunner?:QueryRunner){
+    if(queryRunner){
+     return  queryRunner.manager.delete(AttrProduct, id)
+    }
+    return this.attrProductRepo.delete(id)
+  }
+
+ async deleteProduct (id: string, queryRunner?:QueryRunner){
+  if(queryRunner){
+    return  queryRunner.manager.delete(Product, id)
+  }
+  return this.productRepo.delete(id)
+ }
+
+ async deleteVarientByProductId(productId: string, queryRunner ?:QueryRunner){
+  if(queryRunner){
+    return queryRunner.manager.delete(Varient, {productId})
+  }
+  return this.varientRepo.delete({productId})
+ }
+
+
+  @Cron('0 0 1 * *')
+  async setNullDiscountPrice(){
+    console.log('set null discount price for all varient')
+    this.varientRepo.update({}, {discountPrice: null})
   }
 }

@@ -17,15 +17,13 @@ export class CategoryService {
     return this.categoryRepo.find()
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} category`;
+
+
+  update(id: string, updateCategoryDto: UpdateCategoryDto) {
+    return this.categoryRepo.update(id, updateCategoryDto)
   }
 
-  update(id: number, updateCategoryDto: UpdateCategoryDto) {
-    return `This action updates a #${id} category`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} category`;
+  remove(id: string) {
+    return this.categoryRepo.delete(id)
   }
 }

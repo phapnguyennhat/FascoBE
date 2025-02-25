@@ -1,6 +1,7 @@
 import { Type } from "class-transformer";
-import { ArrayMinSize, IsArray, IsBoolean, IsNotEmpty, IsString, IsUUID, Min, MinLength, ValidateNested } from "class-validator";
+import { ArrayMinSize, ArrayUnique, IsArray, IsBoolean, IsNotEmpty, IsString, IsUUID, Min, MinLength, ValidateNested } from "class-validator";
 import { UniqueHasImage } from "src/common/decorator/uniqueHasImage";
+import { CreateValueAttrDto } from "./createValueAttr.dto";
 
 export class CreateAttrProductDto {
   @IsNotEmpty()
@@ -11,6 +12,15 @@ export class CreateAttrProductDto {
   @IsBoolean()
   @IsNotEmpty()
   hasImage: boolean
+
+
+  @IsNotEmpty()
+  @IsArray()
+  @Type(() => CreateValueAttrDto)
+  @ValidateNested({ each: true })
+  @ArrayMinSize(1)
+  @ArrayUnique((item: CreateValueAttrDto) => item.value) 
+  valueAttrs: CreateValueAttrDto[]
 }
 
 export class CreateAttrProductDtos{

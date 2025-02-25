@@ -1,9 +1,10 @@
 import { PatternEntity } from "src/common/patternEntity";
-import { Column, Entity, ManyToOne } from "typeorm";
+import { Check, Column, Entity, ManyToOne } from "typeorm";
 import { Order } from "./order.entity";
 import { Varient } from "./varient.entity";
 
 @Entity()
+@Check(`"quantity" > 0`)
 export class OrderItem extends PatternEntity{
   @Column()
   orderId: string
@@ -23,7 +24,7 @@ export class OrderItem extends PatternEntity{
   order: Order;
 
   @ManyToOne(() => Varient, {
-    onDelete: 'SET NULL',
+    onDelete: 'CASCADE',
   })
   varient: Varient;
 }

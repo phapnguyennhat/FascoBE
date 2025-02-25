@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QueryParam } from 'src/common/queryParam';
 import { Brand } from 'src/database/entity/brand.entity';
@@ -52,6 +52,22 @@ export class BrandService {
       return queryRunner.manager.update(Brand, id, updateBrand)
     }
     return this.brandRepo.update(id, updateBrand)
+  }
+
+  async findById(id: string){
+    const brand = await this.brandRepo.findOneBy({id})
+    if(!brand){
+      throw new NotFoundException('Not found brand')
+    }
+    return brand
+  }
+
+  async deleteById(id: string, queryRunner?:QueryRunner){
+    if(queryRunner){
+      console.log({id}, 'delet this id')
+      return queryRunner.manager.delete(Brand, {id})
+    }
+    return this.brandRepo.delete(id)
   }
 
 }

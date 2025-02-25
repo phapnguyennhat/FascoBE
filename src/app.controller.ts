@@ -1,6 +1,7 @@
 import { Controller, Get, Post, UploadedFiles, UseInterceptors } from '@nestjs/common';
 import { AppService } from './app.service';
 import { AnyFilesInterceptor, FileFieldsInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { Cron } from '@nestjs/schedule';
 
 @Controller()
 export class AppController {
@@ -15,7 +16,12 @@ export class AppController {
   @Post()
   @UseInterceptors(AnyFilesInterceptor()) // ✅ Cho phép upload nhiều trường
   async test(@UploadedFiles() files: Express.Multer.File[]) {
+
+    console.log(files)
   }
+
+
   
+ 
   
 }

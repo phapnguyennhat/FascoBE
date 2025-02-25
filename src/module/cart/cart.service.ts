@@ -41,7 +41,24 @@ export class CartService {
       .innerJoin('varient.product', 'product')
       .innerJoin('varient.valueAttrs', 'valueAttrs')
       .innerJoin('valueAttrs.image', 'image')
-      .select(['cartItem.id','cartItem.varientId','valueAttrs.value','valueAttrs.attrName','image.url', 'cartItem.quantity', 'product.name', 'product.id', 'varient.price','varient.pieceAvail'])
+      .innerJoin('valueAttrs.attrProduct', 'attrProduct')
+      .select([
+        'cartItem.id',
+        'cartItem.varientId',
+        'valueAttrs.value',
+        // 'valueAttrs.attrName',
+        'attrProduct.name',
+        'image.url',
+        'cartItem.quantity',
+        'product.name',
+        'product.pieceAvail',
+        'product.sold',
+        'product.id',
+        'varient.price',
+        'varient.discountPrice',
+        'varient.sold',
+        'varient.pieceAvail',
+      ])
       .getMany();
   }
 

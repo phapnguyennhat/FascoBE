@@ -23,7 +23,7 @@ export class CartController {
   @UseGuards(JwtAuthGuard)
   async getCart(@Req() req){
     return this.cartService.getCartByUserId(req.user.id)
-  }
+}
 
   @Put(':id')
   @UseGuards(JwtAuthGuard)

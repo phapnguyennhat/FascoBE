@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   HttpStatus,
   NotFoundException,
@@ -84,8 +85,8 @@ export class BrandController {
           queryRunner,
         );
         await this.brandService.update(
-          brand.name,
-          { imageId: new_image.id },
+          brand.id,
+          { imageId: new_image.id, name: createBrandDto.name },
           queryRunner,
         );
       } else {
@@ -122,16 +123,18 @@ export class BrandController {
           fileType: /(jpg|jpeg|png|webp|gif)$/,
         })
 
+        .addMaxSizeValidator({
+          maxSize: 5 * 1024 * 1024, // 🎯 Giới hạn file tối đa 5MB
+        })
         .build({
           errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+          fileIsRequired: false
         }),
     )
     file: Express.Multer.File,
     
   ) {
-    
     const queryRunner = this.dataSource.createQueryRunner()
-
     try {
       await queryRunner.connect()
       await queryRunner.startTransaction()
@@ -157,4 +160,31 @@ export class BrandController {
       await queryRunner.release()
     }
   }
+
+
+  @Delete(':id')
+  @UseGuards(RoleGuard(ERole.ADMIN))
+  @UseGuards(JwtAuthGuard)
+  async delete(@Param(){id}: IdParam){
+      const brand = await this.brandService.findById(id)
+
+      const queryRunner = this.dataSource.createQueryRunner()
+
+      try {
+        await queryRunner.connect()
+        await queryRunner.startTransaction()
+
+        await this.brandService.deleteById(brand.id, queryRunner)
+        await this.imageService.delete(brand.imageId, queryRunner)
+        
+        await queryRunner.commitTransaction()
+        return {message: 'Delete brand successfully'}
+      } catch (error) {
+        await queryRunner.rollbackTransaction()
+        throw error
+      } finally{
+        await queryRunner.release()
+      }
+  }
+  
 }

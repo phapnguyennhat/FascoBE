@@ -1,19 +1,22 @@
-import { Column, Entity, ManyToOne, OneToMany, PrimaryColumn } from "typeorm";
+import { Column, Entity, ManyToOne, OneToMany, PrimaryColumn, Unique } from "typeorm";
 import { Product } from "./product.entity";
 import { ValueAttr } from "./valueAttr.entity";
+import { PatternEntity } from "src/common/patternEntity";
 
 @Entity()
-export class AttrProduct {
-  @PrimaryColumn()
+@Unique(['name', 'productId'])
+export class AttrProduct extends PatternEntity {
+
+  @Column()
   name: string
 
-  @PrimaryColumn()
+  @Column()
   productId: string
 
   @Column({default: false})
   hasImage: boolean
 
-  @OneToMany(()=>ValueAttr, (valueAttr: ValueAttr)=>valueAttr.attrProduct)
+  @OneToMany(()=>ValueAttr, (valueAttr: ValueAttr)=>valueAttr.attrProduct, {cascade: true})
   valueAttrs: ValueAttr[]
 
   @ManyToOne(()=>Product )

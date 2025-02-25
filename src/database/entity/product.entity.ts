@@ -12,7 +12,8 @@ import { FavoriteDetail } from "./favoriteDetail.entity";
 
 @Entity()
 @Check(`"starRating" >=0 AND "starRating" <=5`)
-
+@Check(`"sold" >= 0`)
+@Check(`"pieceAvail" >= 0`)
 export class Product extends PatternEntity {
 
   @Column({unique: true})
@@ -24,13 +25,13 @@ export class Product extends PatternEntity {
   @Column({default: 0})
   reviewNumber: number;
   
-  @Column({default: 0})
+  @Column({default: 0}, )
   sold: number
 
   @Column({ default: 0 })
   pieceAvail: number;
 
-  @Column('decimal', { precision: 10, scale: 2 , nullable: true})
+  @Column('decimal', { precision: 10, scale: 2 })
   price: number
 
   @Column('decimal', { precision: 10, scale: 2 , nullable: true})
@@ -39,11 +40,11 @@ export class Product extends PatternEntity {
   @Column()
   categoryName: string
 
-  @ManyToOne(()=>Category, )
+  @ManyToOne(()=>Category, {onUpdate:'CASCADE'} )
   @JoinColumn()
   category: Category
 
-  @ManyToMany(()=>Tag, (tag: Tag)=>tag.products)
+  @ManyToMany(()=>Tag, (tag: Tag)=>tag.products , {onUpdate: 'CASCADE'})
   @JoinTable({name: 'product_tag'})
   tags: Tag[]
 
@@ -52,7 +53,7 @@ export class Product extends PatternEntity {
   @Column({nullable: true})
   brandId: string
 
-  @ManyToOne(()=>Brand)
+  @ManyToOne(()=>Brand, {onDelete: 'SET NULL'})
   brand: Brand
 
 
@@ -65,7 +66,7 @@ export class Product extends PatternEntity {
   @OneToMany(()=> Varient, (varient: Varient)=>varient.product)
   varients: Varient
 
-  @OneToMany(()=>AttrProduct, (attrProduct: AttrProduct)=>attrProduct.product)
+  @OneToMany(()=>AttrProduct, (attrProduct: AttrProduct)=>attrProduct.product, {cascade: true})
   attrProducts: AttrProduct[]
 
   @OneToMany(()=>Image, (image: Image)=>image.product)

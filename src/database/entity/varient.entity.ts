@@ -31,7 +31,7 @@ export class Varient extends  BaseEntity {
   @ManyToOne(() => Product)
   product: Product;
 
-  @ManyToMany(()=>ValueAttr, (valueAttr:ValueAttr)=>valueAttr.varients)
+  @ManyToMany(()=>ValueAttr, (valueAttr:ValueAttr)=>valueAttr.varients, {cascade: true})
   @JoinTable({name: 'varient_value'})
   valueAttrs: ValueAttr[]
 }

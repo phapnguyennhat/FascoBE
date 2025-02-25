@@ -30,6 +30,10 @@ import { UpdateAddressDto } from '../address/dto/updateAddress.dto';
 import { AddressService } from '../address/address.service';
 import { QueryOrderDto } from './dto/queryOrder.dto';
 import RoleGuard from '../auth/guard/role.guard';
+import { Varient } from 'src/database/entity/varient.entity';
+import { Product } from 'src/database/entity/product.entity';
+import { ParamUpdateOrder } from './dto/paramUpdateOrder';
+import { getPriceVarient } from 'src/util/utils';
 
 @Controller('')
 export class OrderController {
@@ -37,7 +41,6 @@ export class OrderController {
     private readonly orderService: OrderService,
     private readonly dataSource: DataSource,
     private readonly cartService: CartService,
-    private readonly provinceService: ProvinceService,
     private readonly districtService: DistrictService,
     private readonly communeService: CommuneService,
     private readonly addressService: AddressService,
@@ -62,12 +65,12 @@ export class OrderController {
     }
     const createOrderItems: CreateOrderItem[] = cartItems.map((item) => ({
       varientId: item.varientId,
-      price: item.varient.price,
+      price: getPriceVarient(item.varient),
       quantity: item.quantity,
     }));
 
     const subTotal = cartItems.reduce(
-      (sum, cartItem) => sum + cartItem.quantity * cartItem.varient.price,
+      (sum, cartItem) => sum + cartItem.quantity * getPriceVarient(cartItem.varient),
       0,
     );
 
@@ -90,11 +93,28 @@ export class OrderController {
     try {
       await queryRunner.connect();
       await queryRunner.startTransaction();
-
+      
+      await Promise.all(cartItems.map( async cartItem =>{
+        const {quantity, varient, varientId} = cartItem
+        const {sold: varientSold, pieceAvail: varientPieceAvail} = varient
+      
+        if(quantity >varient.pieceAvail){
+          throw new BadRequestException('this variant is sold out')
+        }
+        await queryRunner.manager.update(Varient, varientId, {pieceAvail: varientPieceAvail-quantity, sold: varientSold+quantity})
+        // await queryRunner.manager.update(Product,product.id, )
+        
+      }))
+      
       const newOrder = await this.orderService.createOrder(
         createOrder,
         queryRunner,
       );
+
+
+  
+
+
       await this.cartService.deleteByUserId(req.user.id, queryRunner);
 
       await queryRunner.commitTransaction();
@@ -110,27 +130,40 @@ export class OrderController {
   @Get('user/order')
   @UseGuards(JwtAuthGuard)
   async getOrder(@Req() req, @Query() query: QueryOrderDto) {
+    if(req.user.role===ERole.ADMIN){
+      return this.orderService.getAllOrder(query)
+    }
     return this.orderService.getOrderByUserId(req.user.id, query);
   }
+
 
   @Get('user/order/:id')
   @UseGuards(JwtAuthGuard)
   async getOrderById(@Req() req, @Param() { id }: IdParam) {
-    const order: Order = await this.orderService.getOrderById(id);
-    if (req.user.role === ERole.USER) {
-      if (req.user.id !== order.userId) {
-        throw new ForbiddenException('This is not your order 🥲');
-      }
-      return order;
-    }
-    return order;
+    return this.orderService.getOrderById(id, req.user)
   }
 
-  @Put('user/order/:id/cancel')
+
+
+  @Put('user/order/:id/:status')
   @UseGuards(JwtAuthGuard)
-  async cancelOrder(@Req() req, @Param() { id }: IdParam) {
-    return this.orderService.cancelOrder(req.user.id, id);
+  async cancelOrder(@Req() req, @Param() {id, status}: ParamUpdateOrder) {
+
+    const order = await this.orderService.getOrderById(id, req.user)
+
+    if(status===EStatusOrder.CANCEL){
+      return this.orderService.cancelOrder(order)
+    }
+    else if (status===EStatusOrder.SHIPPING && req.user.role===ERole.ADMIN){
+      return this.orderService.shippingOrder(order)
+    }
+    else if(status===EStatusOrder.COMPLETE && req.user.role===ERole.ADMIN){
+      return this.orderService.completeOrder(order)
+    }
+    throw new BadRequestException('not allow')
   }
+
+  
 
   
 
@@ -142,13 +175,11 @@ export class OrderController {
     @Param() {id, addressId}: { id: string; addressId: string },
   ) {
 
-    const order: Order = await this.orderService.getOrderById(id);
+    const order: Order = await this.orderService.getOrderById(id, req.user);
     if(order.status!==EStatusOrder.PENDING){
       throw new ForbiddenException('Do not allow update address of order whose status is not pending')
     }
-    if(order.userId !==req.user.id){
-      throw new ForbiddenException('This is not your order 🥲');
-    }
+    
     return this.addressService.updateAddressOrder(order.id,addressId,updateAddressDto)
   }
 }

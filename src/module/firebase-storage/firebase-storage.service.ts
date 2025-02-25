@@ -51,7 +51,7 @@ export class FirebaseStorageService {
       await deleteObject(desertRef);
       return { message: 'Xóa file thành công' };
     } catch (error) {
-      throw new NotFoundException(`Không tìm thấy file ${key}`);
+      return {message: `Không tìm thấy file ${key}`};
     }
   }
 }

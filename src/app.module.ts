@@ -24,6 +24,7 @@ import { AddressModule } from './module/address/address.module';
 import { OrderModule } from './module/order/order.module';
 import { FavoriteModule } from './module/favorite/favorite.module';
 import { CategoryModule } from './module/category/category.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 
 @Module({
@@ -50,6 +51,7 @@ import { CategoryModule } from './module/category/category.module';
     OrderModule,
     FavoriteModule,
     CategoryModule,
+    ScheduleModule.forRoot(),
    
   ],
   controllers: [AppController],

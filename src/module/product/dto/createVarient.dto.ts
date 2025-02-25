@@ -6,11 +6,12 @@ import {
   IsNumber,
   IsOptional,
   IsPositive,
+  IsString,
   IsUUID,
   Min,
   ValidateNested,
 } from 'class-validator';
-import { CreateValueAttr, CreateValueAttrDto } from './createValueAttr.dto';
+import {  CreateValueAttrDto } from './createValueAttr.dto';
 import { IsSet } from 'src/common/decorator/isSet';
 import { ValueAttr } from 'src/database/entity/valueAttr.entity';
 
@@ -43,15 +44,14 @@ export class CreateVarientDto {
   @ArrayMinSize(1, {
     message: 'valueAttrIds must contain at least one element',
   })
-  @IsUUID('4', { each: true, message: 'Each valueAttrId must be a valid UUID' })
+  @IsString({each: true})
   @IsSet({
     message: 'valueAttrIds must not contain duplicate elements',
   })
-  valueAttrIds: string[];
+  attrValueNames: string[];
 }
 
 export class CreateVarient extends CreateVarientDto {
   productId: string;
   valueAttrs: ValueAttr[]
- 
 }

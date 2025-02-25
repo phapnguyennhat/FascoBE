@@ -6,22 +6,12 @@ export class CreateValueAttrDto {
   @IsNotEmpty()
   value: string
 
-  @IsString()
-  @IsNotEmpty()
-  attrName: string
+  // @IsString()
+  // @IsNotEmpty()
+  // attrName: string
 
 }
 
-export class CreateValueAttr extends CreateValueAttrDto{
-  productId: string
-  imageId?: string
-}
 
-export class CreateAbulkValueAttrDto {
-  @IsArray()
-  @ArrayMinSize(1)
-  @Type(()=> CreateValueAttrDto)
-  @ValidateNested({each: true})
-  createValueAttrDtos: CreateValueAttrDto[]
-}
+
 

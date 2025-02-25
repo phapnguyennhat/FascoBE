@@ -7,6 +7,6 @@ export class Tag{
   @PrimaryColumn()
   name: string
 
-  @ManyToMany(()=>Product, {onDelete: 'CASCADE'})
+  @ManyToMany(()=>Product, (product: Product)=>product.tags, {onDelete: 'CASCADE'})
   products: Product
 }
