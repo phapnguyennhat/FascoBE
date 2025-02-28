@@ -45,5 +45,4 @@ export class Order extends PatternEntity{
   @OneToOne(()=>Address, (address: Address)=>address.order, {cascade: true})
   address: Address
 
-  
 }

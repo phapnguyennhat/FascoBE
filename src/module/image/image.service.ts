@@ -1,4 +1,4 @@
-  import { BadRequestException, Injectable } from '@nestjs/common';
+  import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QueryRunner, Repository } from 'typeorm';
 import { FirebaseStorageService } from '../firebase-storage/firebase-storage.service';
@@ -37,6 +37,10 @@ export class ImageService {
     if(queryRunner){
 
       const image: Image = await queryRunner.manager.findOneBy(Image,{id: imageId})
+      if(!image){
+        throw new NotFoundException('Not found image')
+      }
+      
       await  queryRunner.manager.delete(Image, imageId)
       await this.firebaseStorageService.deleteFile(image.key)
       return {message: 'delete image successfully'}

@@ -21,7 +21,7 @@ export class ValueAttr extends PatternEntity {
 
   @Column()
   attrProductId: string
-
+  
   @ManyToOne(()=>AttrProduct)
   attrProduct: AttrProduct
 
