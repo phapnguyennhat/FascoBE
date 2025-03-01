@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { typeOrmAsyncConfig } from 'src/db/data-source';
+import { typeOrmAsyncConfig } from 'db/data-source';
 
 
 @Module({

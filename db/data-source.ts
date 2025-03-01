@@ -15,10 +15,11 @@ export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
       password: configService.get('POSTGRES_PASSWORD'),
       database: configService.get('POSTGRES_DB'),
       entities: ['dist/**/*.entity.js'],
-      synchronize: true,
+      synchronize: false,
       timezone: 'Asia/Ho_Chi_Minh',
       // logging: true,
       migrations: ['dist/db/migrations/*.js'],
+      ssl: true
     };
   },
 };
@@ -31,8 +32,9 @@ export const dataSourceOptions: DataSourceOptions = {
   password: process.env.POSTGRES_PASSWORD,
   database: process.env.POSTGRES_DB,
   entities: ['dist/**/*.entity.js'],
-  synchronize: true,
+  synchronize: false,
   migrations: ['dist/db/migrations/*.js'],
+  ssl: true
 };
 
 const dataSource = new DataSource(dataSourceOptions);
