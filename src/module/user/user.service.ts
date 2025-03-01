@@ -1,8 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AuthBy, User } from 'src/database/entity/user.entity';
+import { AuthBy, IAuthPayload, User } from 'src/database/entity/user.entity';
 import { QueryRunner, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/createUser.dto';
 import { UpdateUserDto } from './dto/updateUser.dto';
@@ -10,6 +10,10 @@ import { TokenPayload } from 'google-auth-library';
 import * as bcrypt from 'bcrypt'
 import { Profile } from '../facebook-auth/response/profile';
 import { UpdatePasswordDto } from '../auth/dto/updatePassword.dto';
+import dayjs from 'dayjs';
+
+
+
 
 @Injectable()
 export class UserService {
@@ -18,6 +22,16 @@ export class UserService {
   ) {}
   
   async create(createUserDto: CreateUserDto) {
+    let user = await this.getByEmail(createUserDto.email) 
+    if(user){
+      throw new BadRequestException('Email has been used already')
+    }
+
+    user = await this.getByUsername(createUserDto.username)
+    if(user){
+      throw new BadRequestException('Username has been used already')
+    }
+    
     return this.userRepo.save(createUserDto);
   }
 
@@ -88,6 +102,41 @@ export class UserService {
     const hashedPassword = await bcrypt.hash(updatePasswordDto.new_password, 10);
     
     return this.userRepo.update({id: userId}, {password: hashedPassword})
+  }
+
+
+  async genCode(email: string, code: string,codeExprired: string ){
+    return this.userRepo.update({email}, {code, codeExprired})
+  }
+
+  async verifyCode (email: string, code: string){
+    const user = await this.userRepo.findOneBy({email, code})
+    if(!user){
+      throw new BadRequestException('Code is exprired or incorrect')
+    }
+    const dateExprired = dayjs(user.codeExprired); // parse 
+   
+    const checkValidCode = dayjs().isBefore(dateExprired);
+    
+    if(checkValidCode){
+      // remove code
+      await this.userRepo.update(user.id, {code:null})
+    }else{
+      throw new BadRequestException('Code is exprired or incorrect')
+    }
+    return checkValidCode
+  }
+
+  async resetPassword(id: string, password: string){
+    const user =await this.userRepo.findOneBy({id})
+    if(!user){
+      throw new NotFoundException('Not found user')
+    }
+    return this.userRepo.update(id, {password})
+  }
+
+  async changePassword(id: string, password: string){
+    return this.userRepo.update(id, {password, codeExprired: null})
   }
   
 }

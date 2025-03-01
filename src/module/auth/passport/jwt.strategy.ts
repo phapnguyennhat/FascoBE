@@ -29,7 +29,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: IAuthPayload) {
     
-    const user: User = await plainToInstance(
+    const user: User = plainToInstance(
       User,
       await this.userService.getById(payload.userId),
     );

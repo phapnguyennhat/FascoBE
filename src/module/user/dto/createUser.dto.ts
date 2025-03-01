@@ -22,7 +22,7 @@ export class CreateUserDto {
   email: string
 
 
-  @IsOptional()
-  @IsEnum(ERole)
-  role: ERole
+  // @IsOptional()
+  // @IsEnum(ERole)
+  // role: ERole
 }

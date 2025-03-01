@@ -1,6 +1,6 @@
 import { Transform } from "class-transformer";
 import { BaseEntity, CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import * as moment from 'moment-timezone';
+import  moment from 'moment-timezone';
 
 export class PatternEntity extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')

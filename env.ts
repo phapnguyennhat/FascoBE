@@ -12,6 +12,8 @@ export const validationSchema = Joi.object({
   JWT_ACCESS_TOKEN_EXPIRATION_TIME:Joi.string().required(),
   JWT_REFRESH_TOKEN_SECRET: Joi.string().required(),
   JWT_REFRESH_TOKEN_EXPIRATION_TIME: Joi.string().required(),
+  JWT_CODE_TOKEN_SECRET: Joi.string().required(),
+  JWT_CODE_TOKEN_EXPIRATION_TIME: Joi.string().required(),
 
   GOOGLE_AUTH_CLIENT_ID: Joi.string().required(),
   GOOGLE_AUTH_CLIENT_SECRET: Joi.string().required(),
@@ -30,6 +32,9 @@ export const validationSchema = Joi.object({
   MEASUREMENTID: Joi.string().required(),
 
   FACEBOOK_CLIENT_ID: Joi.string().required(),
-  FACEBOOK_CLIENT_SECRET: Joi.string().required()
+  FACEBOOK_CLIENT_SECRET: Joi.string().required(),
+
+  MAIL_USER: Joi.string().required(),
+  MAIL_PASSWORD: Joi.string().required(),
   
 });

@@ -1,9 +1,11 @@
 import { Address } from './address.entity';
-import { Exclude } from "class-transformer";
+import { Exclude, Transform } from "class-transformer";
 import {  Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Image } from "./image.entity";
 import { extend } from "joi";
 import { PatternEntity } from "src/common/patternEntity";
+import  moment from 'moment-timezone';
+
 
 export enum AuthBy {
   GOOGLE='GOOGLE',
@@ -34,7 +36,7 @@ export class User extends PatternEntity {
   @Column({nullable: true})
   name: string
 
-  @Column({nullable: true})
+  @Column({nullable: true, unique: true})
   username: string
 
   @Column({nullable: true})
@@ -66,6 +68,12 @@ export class User extends PatternEntity {
   @Column({nullable: true})
   avatarId: string
 
+  @Column({nullable: true})
+  @Exclude()
+  code: string
+
+  @Column({nullable: true})
+  codeExprired: Date;
 
   @OneToOne(()=> Image, {eager: true, onDelete: 'SET NULL'})
   @JoinColumn()

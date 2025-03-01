@@ -21,5 +21,4 @@ export class AttrProduct extends PatternEntity {
 
   @ManyToOne(()=>Product )
   product: Product
-
 }

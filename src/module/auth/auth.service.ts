@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { IAuthPayload, User } from 'src/database/entity/user.entity';
 import * as bcrypt from 'bcrypt';
 import { isEmail } from 'class-validator';
+import dayjs from 'dayjs';
 
 
 @Injectable()
@@ -62,6 +63,27 @@ export class AuthService {
     };
   }
 
+  async verifyCode(email: string, code :string){
+    await this.userService.verifyCode(email, code)
+    const user = await this.userService.getByEmail(email)
+    const payload: IAuthPayload = {
+      userId: user.id,
+    };
+    const accessTime = this.configService.get('JWT_CODE_TOKEN_EXPIRATION_TIME') as number
+
+    const token = this.jwtService.sign(payload, {
+      secret: this.configService.get('JWT_CODE_TOKEN_SECRET'),
+      expiresIn: `${accessTime}s`,
+    })
+    const cookie = `ResetPassword=${token}; HttpOnly; Path=/; Max-Age=${accessTime}`;
+    return {
+      token,
+      accessTime,
+      cookie
+    }
+    
+  }
+
   async getCookieWithJwtRefreshToken(userId: string) {
      await this.userService.getById(userId);
     const payload: IAuthPayload = {
@@ -77,5 +99,16 @@ export class AuthService {
       accessTime: this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME'),
       token,
     };
+  }
+
+  async resetPassword(user: User, password: string){
+   
+    if(user.codeExprired){
+      await this.userService.changePassword(user.id, password)
+    }else{
+      throw new BadRequestException('Token is used already')
+    }
+        
+  
   }
 }

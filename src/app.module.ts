@@ -2,7 +2,7 @@ import { ClassSerializerInterceptor, MiddlewareConsumer, Module } from '@nestjs/
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { validationSchema } from '../env';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { AllExceptionsFilter } from 'all-exception.filter';
@@ -25,6 +25,9 @@ import { OrderModule } from './module/order/order.module';
 import { FavoriteModule } from './module/favorite/favorite.module';
 import { CategoryModule } from './module/category/category.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { EmailModule } from './module/email/email.module';
+
+
 
 
 @Module({
@@ -52,6 +55,8 @@ import { ScheduleModule } from '@nestjs/schedule';
     FavoriteModule,
     CategoryModule,
     ScheduleModule.forRoot(),
+
+    EmailModule,
    
   ],
   controllers: [AppController],
