@@ -1,16 +1,12 @@
-import {  BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {  ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EStatusOrder, Order } from 'src/database/entity/order.entity';
-import { DataSource, FindOptionsWhere, QueryRunner, Repository } from 'typeorm';
-import { CreateOrder } from './dto/CreateOrder.dto';
-import { OrderItem } from 'src/database/entity/orderItem.entity';
-import { CreateOrderItem } from './dto/createOrderItem.dto';
+import { DataSource,  QueryRunner, Repository } from 'typeorm';
 import { QueryOrderDto } from './dto/queryOrder.dto';
 import { UpdateOrderDto } from './dto/updateOrder.dto';
-import { string } from 'joi';
 import { ERole, User } from 'src/database/entity/user.entity';
 import { Varient } from 'src/database/entity/varient.entity';
-import { Product } from 'src/database/entity/product.entity';
+import { CreateOrder } from './dto/createOrder.dto';
 
 @Injectable()
 export class OrderService {
