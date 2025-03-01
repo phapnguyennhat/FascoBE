@@ -12,7 +12,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
-import { CreateOrder, CreateOrderDto } from './dto/CreateOrder.dto';
+import { CreateOrder, CreateOrderDto } from './dto/createOrder.dto';
 import JwtAuthGuard from '../auth/guard/jwt-auth.guard';
 import { DataSource } from 'typeorm';
 import { CreateOrderItem } from './dto/createOrderItem.dto';
@@ -20,10 +20,8 @@ import { CartService } from '../cart/cart.service';
 import { CartItem } from 'src/database/entity/cartItem.entity';
 import { feeShip, feeWrap, minOrderFreeShip } from 'src/common/constant';
 import { EStatusOrder, Order, TotalOrder } from 'src/database/entity/order.entity';
-import { ProvinceService } from '../province/province.service';
 import { DistrictService } from '../district/district.service';
 import { CommuneService } from '../commune/commune.service';
-import { District } from 'src/database/entity/district.entity';
 import { IdParam } from 'src/common/validate';
 import { ERole } from 'src/database/entity/user.entity';
 import { UpdateAddressDto } from '../address/dto/updateAddress.dto';
@@ -31,7 +29,6 @@ import { AddressService } from '../address/address.service';
 import { QueryOrderDto } from './dto/queryOrder.dto';
 import RoleGuard from '../auth/guard/role.guard';
 import { Varient } from 'src/database/entity/varient.entity';
-import { Product } from 'src/database/entity/product.entity';
 import { ParamUpdateOrder } from './dto/paramUpdateOrder';
 import { getPriceVarient } from 'src/util/utils';
 
