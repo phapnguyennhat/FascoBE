@@ -14,12 +14,16 @@ export class CategoryService {
   }
 
   findAll() {
-    return this.categoryRepo.find()
+    return this.categoryRepo.find({
+      order: {
+        name: 'ASC'
+      }
+    })
   }
 
 
 
-  update(id: string, updateCategoryDto: UpdateCategoryDto) {
+  async update(id: string, updateCategoryDto: UpdateCategoryDto) {
     return this.categoryRepo.update(id, updateCategoryDto)
   }
 

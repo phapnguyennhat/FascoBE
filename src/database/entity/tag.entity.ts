@@ -4,7 +4,10 @@ import { Product } from "./product.entity";
 @Entity()
 export class Tag{
 
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn('uuid')
+  id: string
+
+  @Column({unique: true})
   name: string
 
   @ManyToMany(()=>Product, (product: Product)=>product.tags, {onDelete: 'CASCADE'})

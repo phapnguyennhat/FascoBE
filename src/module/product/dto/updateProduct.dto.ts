@@ -12,16 +12,14 @@ export class UpdateProductDto {
 
   
   @IsOptional()
-  @IsString()
-  categoryName: string
+  @IsUUID()
+  categoryId: string
 
   @IsOptional()
   @IsArray()
-  @Type(()=>UpdateTagDto)
-  @ValidateNested({each: true})
   @ArrayMinSize(1)
-  @ArrayUnique((item: UpdateTagDto)=>item.name)
-  tags: UpdateTagDto[]
+  @IsString({each: true})
+  tagIds: string[]
 
   @IsUUID()
   @IsOptional()

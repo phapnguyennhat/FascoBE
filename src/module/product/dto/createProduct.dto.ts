@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { ArrayMinSize, ArrayUnique, IsArray, IsEnum, IsNotEmpty, IsNumber, IsPositive, IsString, Min, MinLength, ValidateNested } from "class-validator";
+import { ArrayMinSize, ArrayUnique, IsArray, IsEnum, IsNotEmpty, IsNumber, IsPositive, IsString, IsUUID, Min, MinLength, ValidateNested } from "class-validator";
 import { Tag } from "src/database/entity/tag.entity";
 import { CreateAttrProductDto } from "./createAttrProduct.dto";
 import { UniqueHasImage } from "src/common/decorator/uniqueHasImage";
@@ -13,16 +13,14 @@ export class CreateProductDto {
   name: string;
 
   @IsNotEmpty()
-  @IsString()
-  categoryName: string;
+  @IsUUID()
+  categoryId: string;
 
   @IsNotEmpty()
   @IsArray()
-  @Type(() => CreateTagDto)
-  @ValidateNested({ each: true })
   @ArrayMinSize(1)
-  @ArrayUnique((item: CreateTagDto) => item.name) 
-  tags: CreateTagDto[]
+  @IsString({each: true})
+  tagIds: string[]
 
   @IsString()
   @IsNotEmpty()
@@ -48,6 +46,7 @@ export class CreateProductDto {
 
 export class CreateProduct extends CreateProductDto{
   userId: string
+  tags: Tag[]
   price?:number
   discountPrice ?:number
   pieceAvail?:number

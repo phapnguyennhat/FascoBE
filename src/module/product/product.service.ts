@@ -134,7 +134,7 @@ export class ProductService {
 
     // Thêm điều kiện cho categoryName (nếu có)
     if (categoryName) {
-      queryBuilder.andWhere('product.categoryName = :categoryName', {
+      queryBuilder.innerJoin('product.category', 'category').andWhere('category.name = :categoryName', {
         categoryName,
       });
     }
@@ -323,7 +323,8 @@ export class ProductService {
     const queryBuilder = this.productRepo
       .createQueryBuilder('product')
       .andWhere('product.id = :id', { id })
-      .innerJoin('product.tags', 'tags')
+      .leftJoin('product.tags', 'tags')
+      .leftJoin('product.category', 'category')
       .innerJoin('product.attrProducts', 'attrProducts')
       .innerJoin('attrProducts.valueAttrs', 'valueAttrs')
       .innerJoin('product.varients', 'varients')
@@ -338,9 +339,9 @@ export class ProductService {
       .select([
         'product.id',
         'product.name',
-        'product.categoryName',
         'product.brandId',
-        'tags.name',
+        'category',
+        'tags',
         'attrProducts.id',
         'attrProducts.name',
         'valueAttrs.id',

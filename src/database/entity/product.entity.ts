@@ -37,10 +37,10 @@ export class Product extends PatternEntity {
   @Column('decimal', { precision: 10, scale: 2 , nullable: true})
   discountPrice: number;
 
-  @Column()
-  categoryName: string
+  @Column({nullable: true})
+  categoryId: string
 
-  @ManyToOne(()=>Category, {onUpdate:'CASCADE'} )
+  @ManyToOne(()=>Category, {onUpdate:'CASCADE', onDelete: 'SET NULL'} )
   @JoinColumn()
   category: Category
 

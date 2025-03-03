@@ -25,7 +25,7 @@ import { IdParam } from 'src/common/validate';
 
 import { CreateVarientDto } from './dto/createVarient.dto';
 import { AnyFilesInterceptor, FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import { DataSource } from 'typeorm';
+import { DataSource, In } from 'typeorm';
 import { ImageService } from '../image/image.service';
 import { QueryProductDto } from './dto/queryProduct';
 import { SearchParams } from 'src/common/searchParams';
@@ -41,6 +41,7 @@ import { AttrProduct } from 'src/database/entity/attrProduct.entity';
 import { ValueAttr } from 'src/database/entity/valueAttr.entity';
 import { Image } from 'src/database/entity/image.entity';
 import { UpdateImageDto } from './dto/updateImage.dto';
+import { Tag } from 'src/database/entity/tag.entity';
 
 @Controller('product')
 export class ProductController {
@@ -74,11 +75,16 @@ export class ProductController {
       await queryRunner.startTransaction();
 
       const { minPrice, totalPieceAvail } = calcVarient(createVarientDtos);
+      
+      const tags = await queryRunner.manager.find(Tag, {
+        where: {id: In(createProductDto.tagIds)}
+      })
 
       const newProduct = await this.productService.create(
         {
           ...createProductDto,
           userId: req.user.id,
+          tags,
           price: minPrice,
           pieceAvail: totalPieceAvail,
         },
@@ -136,6 +142,8 @@ export class ProductController {
         throw new NotFoundException('Not found product');
       }
       Object.assign(product, updateProductDto);
+      const tags =await queryRunner.manager.find(Tag, {where: {id: In(updateProductDto.tagIds)}})
+      product.tags=tags
       await queryRunner.manager.save(Product, product);
 
       if (updateAttrProductDtos) {
