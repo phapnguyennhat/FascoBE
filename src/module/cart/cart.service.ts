@@ -42,6 +42,8 @@ export class CartService {
       .innerJoin('varient.valueAttrs', 'valueAttrs')
       .innerJoin('valueAttrs.image', 'image')
       .innerJoin('valueAttrs.attrProduct', 'attrProduct')
+
+      .andWhere('cartItem.userId =:userId', {userId})
       .select([
         'cartItem.id',
         'cartItem.varientId',

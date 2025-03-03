@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, HttpCode, HttpStatus, NotFoundException, Post, Put, Req, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, HttpCode, HttpStatus, NotFoundException, Post, Put, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UserService } from '../user/user.service';
 import { RegisterDto } from './dto/register.dto';
@@ -80,6 +80,10 @@ export class AuthController {
     @Body() updatePasswordDto: UpdatePasswordDto,
   ) {
     const { password, confirm_password, new_password } = updatePasswordDto;
+    const user = await this.authService.validateAuthor(req.user.email,password)
+    if(!user){
+      throw new UnauthorizedException('Password is not correct')
+    }
     if (confirm_password !== new_password) {
       throw new BadRequestException('Confirm password must match new password');
     }

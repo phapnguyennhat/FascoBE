@@ -102,6 +102,7 @@ export class ProductService {
         'product.discountPrice',
         'product.createAt',
         'product.sold',
+        'product.starRating',
         'product.reviewNumber',
         'user.name',
         'images.url',
