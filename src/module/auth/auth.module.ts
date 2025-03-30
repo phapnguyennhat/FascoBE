@@ -19,6 +19,7 @@ import { JwtResetPasswordStrategy } from './passport/jwtResetPassword.strategy';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
+      
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get('JWT_ACCESS_TOKEN_SECRET'),
         signOptions: {

@@ -2,7 +2,7 @@ import { ClassSerializerInterceptor, MiddlewareConsumer, Module } from '@nestjs/
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { validationSchema } from '../env';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { AllExceptionsFilter } from 'all-exception.filter';
@@ -26,7 +26,12 @@ import { FavoriteModule } from './module/favorite/favorite.module';
 import { CategoryModule } from './module/category/category.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { EmailModule } from './module/email/email.module';
-
+import { CacheModule } from '@nestjs/cache-manager';
+import { CACHE_TTL } from './common/constant';
+import { createKeyv } from '@keyv/redis';
+import { HttpCacheInterceptor } from './common/http-cache.interceptor';
+import { RedisModule } from './module/redis/redis.module';
+import Redis from 'ioredis';
 
 
 
@@ -55,9 +60,20 @@ import { EmailModule } from './module/email/email.module';
     FavoriteModule,
     CategoryModule,
     ScheduleModule.forRoot(),
-
     EmailModule,
-   
+    CacheModule.registerAsync({
+      isGlobal: true,
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        stores: [
+          createKeyv(configService.get('REDIS_CONNECT')),
+        ],
+        ttl: CACHE_TTL
+      }),
+      
+      inject: [ConfigService]
+    }),
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [AppService,
@@ -69,6 +85,11 @@ import { EmailModule } from './module/email/email.module';
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
     },
+   
+    // {
+    //   provide: APP_INTERCEPTOR,
+    //   useClass: HttpCacheInterceptor
+    // }
   ],
 })
 export class AppModule {

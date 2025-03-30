@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   HttpStatus,
+  Inject,
   NotFoundException,
   Param,
   ParseFilePipeBuilder,
@@ -28,6 +29,10 @@ import { ImageService } from '../image/image.service';
 import { Image } from 'src/database/entity/image.entity';
 import { UpdateBrandDto } from './dto/updateBrand.dto';
 import { IdParam } from 'src/common/validate';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import Redis from 'ioredis';
+import { genKeyQuery } from 'src/util/utils';
 
 @Controller('brand')
 export class BrandController {
@@ -35,16 +40,28 @@ export class BrandController {
     private readonly brandService: BrandService,
     private readonly dataSource: DataSource,
     private readonly imageService: ImageService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    @Inject('REDIS_MANAGER') private readonly redisManager: Redis,
   ) {}
 
   @Get()
   async find(@Query() query: QueryParam) {
-    return this.brandService.find(query);
+    const { page, limit } = query
+    let key = `brand-search:${genKeyQuery(query as any)}`
+    if (!page && !limit) {
+      key = `brand-search:group`
+    }
+    return this.cacheManager.wrap(
+      key,
+      () => this.brandService.find(query),30*60*1000
+    );
   }
 
   @Get('all')
-  async findAll(){
-    return this.brandService.findAll()
+  async findAll() {
+    return this.cacheManager.wrap(`brand-search:all`, () =>
+      this.brandService.findAll(),30*60*1000
+    );
   }
 
   @Post()
@@ -101,6 +118,9 @@ export class BrandController {
         );
       }
       await queryRunner.commitTransaction();
+
+      const keys = await this.redisManager.keys('brand-search:*');
+      await this.cacheManager.mdel(keys);
       return { message: 'Create brand successfully' };
     } catch (error) {
       await queryRunner.rollbackTransaction;
@@ -116,7 +136,7 @@ export class BrandController {
   @UseInterceptors(FileInterceptor('file'))
   async update(
     @Body() updateBrandDto: UpdateBrandDto,
-    @Param() {id} : IdParam,
+    @Param() { id }: IdParam,
     @UploadedFile(
       new ParseFilePipeBuilder()
         .addFileTypeValidator({
@@ -128,63 +148,73 @@ export class BrandController {
         })
         .build({
           errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-          fileIsRequired: false
+          fileIsRequired: false,
         }),
     )
     file: Express.Multer.File,
-    
   ) {
-    const queryRunner = this.dataSource.createQueryRunner()
+    const queryRunner = this.dataSource.createQueryRunner();
     try {
-      await queryRunner.connect()
-      await queryRunner.startTransaction()
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
 
-      const brand: Brand = await queryRunner.manager.findOneBy(Brand,{id})
-      if(!brand){
-        throw new NotFoundException('Not found brand')
+      const brand: Brand = await queryRunner.manager.findOneBy(Brand, { id });
+      if (!brand) {
+        throw new NotFoundException('Not found brand');
       }
 
-      if(file){
-        await this.imageService.delete(brand.imageId, queryRunner)
-        const new_image = await this.imageService.create(file,undefined, queryRunner)
-        await this.brandService.update(id, {...updateBrandDto, imageId: new_image.id}, queryRunner)
-      }else{
-        await this.brandService.update(id, updateBrandDto, queryRunner)
+      if (file) {
+        await this.imageService.delete(brand.imageId, queryRunner);
+        const new_image = await this.imageService.create(
+          file,
+          undefined,
+          queryRunner,
+        );
+        await this.brandService.update(
+          id,
+          { ...updateBrandDto, imageId: new_image.id },
+          queryRunner,
+        );
+      } else {
+        await this.brandService.update(id, updateBrandDto, queryRunner);
       }
-      await queryRunner.commitTransaction()
-     return  {message: 'Update brand successfully'}
+      await queryRunner.commitTransaction();
+      const keys = await this.redisManager.keys('brand-search:*');
+      await this.cacheManager.mdel(keys);
+
+      return { message: 'Update brand successfully' };
     } catch (error) {
-      await queryRunner.rollbackTransaction()
-      throw error
-    }finally{
-      await queryRunner.release()
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
-
 
   @Delete(':id')
   @UseGuards(RoleGuard(ERole.ADMIN))
   @UseGuards(JwtAuthGuard)
-  async delete(@Param(){id}: IdParam){
-      const brand = await this.brandService.findById(id)
+  async delete(@Param() { id }: IdParam) {
+    const brand = await this.brandService.findById(id);
 
-      const queryRunner = this.dataSource.createQueryRunner()
+    const queryRunner = this.dataSource.createQueryRunner();
 
-      try {
-        await queryRunner.connect()
-        await queryRunner.startTransaction()
+    try {
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
 
-        await this.brandService.deleteById(brand.id, queryRunner)
-        await this.imageService.delete(brand.imageId, queryRunner)
-        
-        await queryRunner.commitTransaction()
-        return {message: 'Delete brand successfully'}
-      } catch (error) {
-        await queryRunner.rollbackTransaction()
-        throw error
-      } finally{
-        await queryRunner.release()
-      }
+      await this.brandService.deleteById(brand.id, queryRunner);
+      await this.imageService.delete(brand.imageId, queryRunner);
+
+      await queryRunner.commitTransaction();
+      const keys = await this.redisManager.keys('brand-search:*');
+      await this.cacheManager.mdel(keys);
+      return { message: 'Delete brand successfully' };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
-  
 }

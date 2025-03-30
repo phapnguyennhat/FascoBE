@@ -4,6 +4,7 @@ import {
   Controller,
   ForbiddenException,
   Get,
+  Inject,
   Param,
   Post,
   Put,
@@ -18,7 +19,7 @@ import { DataSource } from 'typeorm';
 import { CreateOrderItem } from './dto/createOrderItem.dto';
 import { CartService } from '../cart/cart.service';
 import { CartItem } from 'src/database/entity/cartItem.entity';
-import { feeShip, feeWrap, minOrderFreeShip } from 'src/common/constant';
+import { feeShip, feeWrap, minOrderFreeShip, REDIS_MANAGER } from 'src/common/constant';
 import { EStatusOrder, Order, TotalOrder } from 'src/database/entity/order.entity';
 import { DistrictService } from '../district/district.service';
 import { CommuneService } from '../commune/commune.service';
@@ -30,7 +31,10 @@ import { QueryOrderDto } from './dto/queryOrder.dto';
 import RoleGuard from '../auth/guard/role.guard';
 import { Varient } from 'src/database/entity/varient.entity';
 import { ParamUpdateOrder } from './dto/paramUpdateOrder';
-import { getPriceVarient } from 'src/util/utils';
+import { genKeyQuery, getPriceVarient } from 'src/util/utils';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import Redis from 'ioredis';
 
 @Controller('')
 export class OrderController {
@@ -41,6 +45,8 @@ export class OrderController {
     private readonly districtService: DistrictService,
     private readonly communeService: CommuneService,
     private readonly addressService: AddressService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    @Inject(REDIS_MANAGER) private readonly redisManager: Redis,
   ) {}
 
   @Post('user/order')
@@ -67,7 +73,8 @@ export class OrderController {
     }));
 
     const subTotal = cartItems.reduce(
-      (sum, cartItem) => sum + cartItem.quantity * getPriceVarient(cartItem.varient),
+      (sum, cartItem) =>
+        sum + cartItem.quantity * getPriceVarient(cartItem.varient),
       0,
     );
 
@@ -90,31 +97,51 @@ export class OrderController {
     try {
       await queryRunner.connect();
       await queryRunner.startTransaction();
-      
-      await Promise.all(cartItems.map( async cartItem =>{
-        const {quantity, varient, varientId} = cartItem
-        const {sold: varientSold, pieceAvail: varientPieceAvail} = varient
-      
-        if(quantity >varient.pieceAvail){
-          throw new BadRequestException('this variant is sold out')
-        }
-        await queryRunner.manager.update(Varient, varientId, {pieceAvail: varientPieceAvail-quantity, sold: varientSold+quantity})
-        // await queryRunner.manager.update(Product,product.id, )
-        
-      }))
-      
+
+      await Promise.all(
+        cartItems.map(async (cartItem) => {
+          const { quantity, varient, varientId } = cartItem;
+          const { sold: varientSold, pieceAvail: varientPieceAvail } = varient;
+
+          if (quantity > varient.pieceAvail) {
+            throw new BadRequestException('this variant is sold out');
+          }
+          await queryRunner.manager.update(Varient, varientId, {
+            pieceAvail: varientPieceAvail - quantity,
+            sold: varientSold + quantity,
+          });
+         
+        }),
+      );
+
       const newOrder = await this.orderService.createOrder(
         createOrder,
         queryRunner,
       );
 
-
-  
-
-
       await this.cartService.deleteByUserId(req.user.id, queryRunner);
 
       await queryRunner.commitTransaction();
+
+      // clear order-search
+      const [keySearchAdmin, keySearchUser] = await Promise.all([
+        this.redisManager.keys('admin:order-search:*'),
+        this.redisManager.keys(`user-detail:${req.user.id}:order-search:*`),
+      ]);
+
+      await Promise.all([
+        this.cacheManager.mdel(keySearchAdmin),
+        this.cacheManager.mdel(keySearchUser),
+        this.cacheManager.del(`cart:${req.user.id}`)
+      ]);
+
+      await Promise.all(cartItems.map(async(cartItem) => {
+        this.cacheManager.del(`product-detail:${cartItem.varient.product.id}:admin`);
+        const keys = await this.redisManager.keys(`product-detail:${cartItem.varient.product.id}:varient:*`)
+        await this.cacheManager.mdel(keys)
+      } ))
+      
+      
       return newOrder;
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -127,56 +154,70 @@ export class OrderController {
   @Get('user/order')
   @UseGuards(JwtAuthGuard)
   async getOrder(@Req() req, @Query() query: QueryOrderDto) {
-    if(req.user.role===ERole.ADMIN){
-      return this.orderService.getAllOrder(query)
+    if (req.user.role === ERole.ADMIN) {
+      return this.cacheManager.wrap(
+        `admin:order-search:${genKeyQuery(query as any) || 'admin'}`,
+        () => this.orderService.getAllOrder(query),
+      );
     }
-    return this.orderService.getOrderByUserId(req.user.id, query);
+    return this.cacheManager.wrap(
+      `user-detail:${req.user.id}:order-search:${genKeyQuery(query as any) || 'user'}`,
+      () => this.orderService.getOrderByUserId(req.user.id, query),
+    );
   }
-
 
   @Get('user/order/:id')
   @UseGuards(JwtAuthGuard)
   async getOrderById(@Req() req, @Param() { id }: IdParam) {
-    return this.orderService.getOrderById(id, req.user)
+    return this.cacheManager.wrap(
+      `user-detail:${req.user.id}:order-detail:${id}`,
+      () => this.orderService.getOrderById(id, req.user),
+    );
   }
-
-
 
   @Put('user/order/:id/:status')
   @UseGuards(JwtAuthGuard)
-  async cancelOrder(@Req() req, @Param() {id, status}: ParamUpdateOrder) {
+  async updateStatus(@Req() req, @Param() { id, status }: ParamUpdateOrder) {
+    const order = await this.orderService.getOrderById(id, req.user);
 
-    const order = await this.orderService.getOrderById(id, req.user)
-
-    if(status===EStatusOrder.CANCEL){
-      return this.orderService.cancelOrder(order)
+    if (status === EStatusOrder.CANCEL) {
+      return this.orderService.cancelOrder(order);
+    } else if (
+      status === EStatusOrder.SHIPPING &&
+      req.user.role === ERole.ADMIN
+    ) {
+      return this.orderService.shippingOrder(order);
+    } else if (
+      status === EStatusOrder.COMPLETE &&
+      req.user.role === ERole.ADMIN
+    ) {
+      return this.orderService.completeOrder(order);
     }
-    else if (status===EStatusOrder.SHIPPING && req.user.role===ERole.ADMIN){
-      return this.orderService.shippingOrder(order)
-    }
-    else if(status===EStatusOrder.COMPLETE && req.user.role===ERole.ADMIN){
-      return this.orderService.completeOrder(order)
-    }
-    throw new BadRequestException('not allow')
+    throw new BadRequestException('not allow');
   }
-
-  
-
-  
 
   @Put('user/order/:id/address/:addressId')
   @UseGuards(JwtAuthGuard)
   async updateAddress(
     @Req() req,
     @Body() updateAddressDto: UpdateAddressDto,
-    @Param() {id, addressId}: { id: string; addressId: string },
+    @Param() { id, addressId }: { id: string; addressId: string },
   ) {
-
     const order: Order = await this.orderService.getOrderById(id, req.user);
-    if(order.status!==EStatusOrder.PENDING){
-      throw new ForbiddenException('Do not allow update address of order whose status is not pending')
+    if (order.status !== EStatusOrder.PENDING) {
+      throw new ForbiddenException(
+        'Do not allow update address of order whose status is not pending',
+      );
     }
-    
-    return this.addressService.updateAddressOrder(order.id,addressId,updateAddressDto)
+
+    const result = await this.addressService.updateAddressOrder(
+      order.id,
+      addressId,
+      updateAddressDto,
+    );
+
+    await this.redisManager.del(`user-detail:${order.userId}:order-detail:${order.id}`)
+  
+    return result
   }
 }

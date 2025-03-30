@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   HttpStatus,
+  Inject,
   NotFoundException,
   Param,
   ParseFilePipeBuilder,
@@ -23,8 +24,7 @@ import { CreateProductDto } from './dto/createProduct.dto';
 
 import { IdParam } from 'src/common/validate';
 
-import { CreateVarientDto } from './dto/createVarient.dto';
-import { AnyFilesInterceptor, FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { DataSource, In } from 'typeorm';
 import { ImageService } from '../image/image.service';
 import { QueryProductDto } from './dto/queryProduct';
@@ -35,13 +35,16 @@ import { ERole } from 'src/database/entity/user.entity';
 import { Varient } from 'src/database/entity/varient.entity';
 import { hasDuplicateVariants } from 'src/util/hasDuplicateVarient';
 import { StringValueNamesDto } from './dto/stringValueNames.dto';
-import { calcVarient, hasDuplicate } from 'src/util/utils';
+import { calcVarient, genKeyQuery, hasDuplicate } from 'src/util/utils';
 import { UpdateProductDto } from './dto/updateProduct.dto';
 import { AttrProduct } from 'src/database/entity/attrProduct.entity';
 import { ValueAttr } from 'src/database/entity/valueAttr.entity';
 import { Image } from 'src/database/entity/image.entity';
 import { UpdateImageDto } from './dto/updateImage.dto';
 import { Tag } from 'src/database/entity/tag.entity';
+import { CACHE_MANAGER, CacheKey } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import Redis from 'ioredis';
 
 @Controller('product')
 export class ProductController {
@@ -49,6 +52,8 @@ export class ProductController {
     private readonly productService: ProductService,
     private readonly dataSource: DataSource,
     private readonly imageService: ImageService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    @Inject('REDIS_MANAGER') private readonly redisManager: Redis,
   ) {}
 
   @Post()
@@ -75,10 +80,10 @@ export class ProductController {
       await queryRunner.startTransaction();
 
       const { minPrice, totalPieceAvail } = calcVarient(createVarientDtos);
-      
+
       const tags = await queryRunner.manager.find(Tag, {
-        where: {id: In(createProductDto.tagIds)}
-      })
+        where: { id: In(createProductDto.tagIds) },
+      });
 
       const newProduct = await this.productService.create(
         {
@@ -114,6 +119,9 @@ export class ProductController {
       );
 
       await queryRunner.commitTransaction();
+      const keys = await this.redisManager.keys('product-search:*');
+      this.cacheManager.mdel(keys);
+
       return newProduct;
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -142,8 +150,10 @@ export class ProductController {
         throw new NotFoundException('Not found product');
       }
       Object.assign(product, updateProductDto);
-      const tags =await queryRunner.manager.find(Tag, {where: {id: In(updateProductDto.tagIds)}})
-      product.tags=tags
+      const tags = await queryRunner.manager.find(Tag, {
+        where: { id: In(updateProductDto.tagIds) },
+      });
+      product.tags = tags;
       await queryRunner.manager.save(Product, product);
 
       if (updateAttrProductDtos) {
@@ -199,6 +209,11 @@ export class ProductController {
       }
 
       await queryRunner.commitTransaction();
+      const keys = await this.redisManager.keys('product-detail:*');
+      const searchKeys = await this.redisManager.keys('product-search:*');
+      await this.cacheManager.mdel(searchKeys);
+      await this.cacheManager.mdel(keys);
+
       return { message: 'update thanh cong' };
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -223,7 +238,6 @@ export class ProductController {
         .addMaxSizeValidator({
           maxSize: 5 * 1024 * 1024, // 🎯 Giới hạn file tối đa 5MB
         })
-        
 
         .build({
           errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -302,6 +316,10 @@ export class ProductController {
       );
 
       await queryRunner.commitTransaction();
+      const keys = await this.redisManager.keys('product-detail:*');
+      const searchKeys = await this.redisManager.keys('product-search:*');
+      await this.cacheManager.mdel(searchKeys);
+      await this.cacheManager.mdel(keys);
       return { message: 'Upload image successfully' };
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -328,18 +346,21 @@ export class ProductController {
 
         .build({
           errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-          fileIsRequired: false
+          fileIsRequired: false,
         }),
     )
     files: Express.Multer.File[],
 
-    @Body() { stringValueIds, stringUpdateImageIds, stringDeleteImageIds}: UpdateImageDto
+    @Body()
+    {
+      stringValueIds,
+      stringUpdateImageIds,
+      stringDeleteImageIds,
+    }: UpdateImageDto,
   ) {
-
     const productImages = [];
     const valueImages = [];
     files.forEach((file) => {
-    
       if (file.fieldname === 'valueImages') {
         valueImages.push(file);
       } else {
@@ -347,51 +368,68 @@ export class ProductController {
       }
     });
 
-    const updateImageIds = stringUpdateImageIds?.split(',') ||[]
-    const deleteImageIds = stringDeleteImageIds?.split(',') ||[]
-    const valueIds = stringValueIds?.split(',') || []
-    const setDeleteImageIds = new Set(deleteImageIds)
-    const isDeleteIdInUpdateId = updateImageIds.some(item => setDeleteImageIds.has(item));
-    if(isDeleteIdInUpdateId){
-      throw new BadRequestException('Ảnh xóa rồi thì không cập nhật nữa ')
+    const updateImageIds = stringUpdateImageIds?.split(',') || [];
+    const deleteImageIds = stringDeleteImageIds?.split(',') || [];
+    const valueIds = stringValueIds?.split(',') || [];
+    const setDeleteImageIds = new Set(deleteImageIds);
+    const isDeleteIdInUpdateId = updateImageIds.some((item) =>
+      setDeleteImageIds.has(item),
+    );
+    if (isDeleteIdInUpdateId) {
+      throw new BadRequestException('Ảnh xóa rồi thì không cập nhật nữa ');
     }
-    if(valueIds.length !== valueImages.length){
-      throw new BadRequestException('số phần tử valueIds phải bằng với valueImages ')
+    if (valueIds.length !== valueImages.length) {
+      throw new BadRequestException(
+        'số phần tử valueIds phải bằng với valueImages ',
+      );
     }
-    if(productImages.length < updateImageIds.length){
-      throw new BadRequestException('Số phần tử productImages phải lớn hơn hoặc bằng với updateImageIds')
+    if (productImages.length < updateImageIds.length) {
+      throw new BadRequestException(
+        'Số phần tử productImages phải lớn hơn hoặc bằng với updateImageIds',
+      );
     }
-    
 
-    const queryRunner = this.dataSource.createQueryRunner()
+    const queryRunner = this.dataSource.createQueryRunner();
     try {
-      await queryRunner.connect()
-      await queryRunner.startTransaction()
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
 
-      const product= await queryRunner.manager.findOneBy(Product, {id})
-      if(!product){
-        throw new NotFoundException('Not found product')
+      const product = await queryRunner.manager.findOneBy(Product, { id });
+      if (!product) {
+        throw new NotFoundException('Not found product');
       }
 
       // update value image
-      await Promise.all(valueIds.map(async (valueId, index)=>{
-        const valueAttr = await queryRunner.manager.findOneBy(ValueAttr, {
-          id: valueId,
-        });
-        if(!valueAttr){
-          throw new NotFoundException('Not found value')
-        }
+      await Promise.all(
+        valueIds.map(async (valueId, index) => {
+          const valueAttr = await queryRunner.manager.findOneBy(ValueAttr, {
+            id: valueId,
+          });
+          if (!valueAttr) {
+            throw new NotFoundException('Not found value');
+          }
 
-        const image = valueImages[index]
-        await this.imageService.delete(valueAttr.imageId,queryRunner)
-        const newImage = await this.imageService.create(image, undefined, queryRunner)
-        await this.productService.updateAttrValue(valueAttr.id, {imageId:newImage.id}, queryRunner)
-      }))
+          const image = valueImages[index];
+          await this.imageService.delete(valueAttr.imageId, queryRunner);
+          const newImage = await this.imageService.create(
+            image,
+            undefined,
+            queryRunner,
+          );
+          await this.productService.updateAttrValue(
+            valueAttr.id,
+            { imageId: newImage.id },
+            queryRunner,
+          );
+        }),
+      );
 
       // delete product image
-      await Promise.all(deleteImageIds.map( async (imageId)=>{
-        await this.imageService.delete(imageId, queryRunner)
-      }))
+      await Promise.all(
+        deleteImageIds.map(async (imageId) => {
+          await this.imageService.delete(imageId, queryRunner);
+        }),
+      );
 
       // update product image
       await Promise.all(
@@ -403,23 +441,28 @@ export class ProductController {
           await this.imageService.create(productImage, product.id, queryRunner);
         }),
       );
-      
-      await queryRunner.commitTransaction()
-      return {message: 'update image successfully'}
+
+      await queryRunner.commitTransaction();
+      const keys = await this.redisManager.keys('product-detail:*');
+      const searchKeys = await this.redisManager.keys('product-search:*');
+      await this.cacheManager.mdel(searchKeys);
+      await this.cacheManager.mdel(keys);
+
+      return { message: 'update image successfully' };
     } catch (error) {
-      await queryRunner.rollbackTransaction()
-      throw error
-    } finally{
-      queryRunner.release()
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      queryRunner.release();
     }
-
-
-    
   }
 
   @Get()
   async findProduct(@Query() queryProduct: QueryProductDto) {
-    return this.productService.findProduct(queryProduct);
+    return this.cacheManager.wrap(
+      `product-search:${genKeyQuery(queryProduct as any)|| 'undefined'}`,
+      () => this.productService.findProduct(queryProduct), 5*60*1000
+    );
   }
 
   @Get(':id')
@@ -427,18 +470,29 @@ export class ProductController {
     @Param() { id }: IdParam,
     @Query() { userId }: { userId: string },
   ) {
-    return this.productService.findProductById(id, userId);
+    return this.cacheManager.wrap(
+      `product-detail:${id}:${genKeyQuery({ userId })}`,
+      () => this.productService.findProductById(id, userId),
+    );
   }
 
   @Get(':id/detail')
   @UseGuards(RoleGuard(ERole.ADMIN))
   @UseGuards(JwtAuthGuard)
   async findProductDetailById(@Param() { id }: IdParam) {
-    return this.productService.findProductDetailById(id);
+    return this.cacheManager.wrap(`product-detail:${id}:admin`, () =>
+      this.productService.findProductDetailById(id),
+    );
   }
 
   @Get(':id/varient')
   async findVarient(@Param() { id }: IdParam, @Query() query: SearchParams) {
+    const cachedData = await this.cacheManager.get(
+      `product-detail:${id}:varient:${genKeyQuery(query)}`,
+    );
+    if (cachedData) {
+      return cachedData;
+    }
     const productAttrs = await this.productService.findAttrByProductId(id);
     const valueIds = await Promise.all(
       productAttrs.map(async (productAttr) => {
@@ -451,7 +505,10 @@ export class ProductController {
       }),
     );
 
-    return this.productService.findVarientByValueIds(valueIds);
+    return this.cacheManager.wrap(
+      `product-detail:${id}:varient:${genKeyQuery(query)}`,
+      () => this.productService.findVarientByValueIds(valueIds),
+    );
   }
 
   @Delete(':id')
@@ -502,6 +559,11 @@ export class ProductController {
       await this.productService.deleteProduct(product.id, queryRunner);
 
       await queryRunner.commitTransaction();
+
+      const keys = await this.redisManager.keys('product-detail:*');
+      const searchKeys = await this.redisManager.keys('product-search:*');
+      await this.cacheManager.mdel(searchKeys);
+      await this.cacheManager.mdel(keys);
       return { message: 'Delete product successfully' };
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -510,91 +572,4 @@ export class ProductController {
       await queryRunner.release();
     }
   }
-
-  // @Delete(':id/image/:imageId')
-  // @UseGuards(RoleGuard(ERole.ADMIN))
-  // @UseGuards(JwtAuthGuard)
-  // async deleteProductImage(
-  //   @Param() { id, imageId }: { id: string; imageId: string },
-  // ) {
-  //   const queryRunner = this.dataSource.createQueryRunner();
-  //   try {
-  //     await queryRunner.connect();
-  //     await queryRunner.startTransaction();
-
-  //     const product = await queryRunner.manager.findOne(Product, {
-  //       where: { id },
-  //       relations: { images: true },
-  //     });
-  //     const images = product.images;
-  //     if (images.length <= 1) {
-  //       throw new BadRequestException(
-  //         'Product has only one image, you can not delete this image',
-  //       );
-  //     }
-  //     const foundImage = images.find((image) => image.id === imageId);
-  //     if (!foundImage) {
-  //       throw new NotFoundException('Not found product image');
-  //     }
-  //     await this.imageService.delete(foundImage.id, queryRunner);
-
-  //     await queryRunner.commitTransaction();
-  //     return { message: 'Delete product image successfully' };
-  //   } catch (error) {
-  //     await queryRunner.rollbackTransaction();
-  //     throw error;
-  //   } finally {
-  //     await queryRunner.release();
-  //   }
-  // }
-
-  // @Put('/value/:id/image')
-  // @UseGuards(RoleGuard(ERole.ADMIN))
-  // @UseGuards(JwtAuthGuard)
-  // @UseInterceptors(FileInterceptor('image'))
-  // async updateValueImage(
-  //   @Param()
-  //   { id }: { id: string;  },
-  //   @UploadedFile() image: Express.Multer.File
-  // ) {
-
-  //   if(!image){
-  //     throw new BadRequestException('Image is required')
-  //   }
-  //   const queryRunner = this.dataSource.createQueryRunner()
-
-  //   try {
-  //     await queryRunner.connect()
-  //     await queryRunner.startTransaction()
-
-  //     const valueAttr = await queryRunner.manager.findOne(ValueAttr, {
-  //       where: {
-  //         id
-  //       },
-  //       relations: {
-  //         attrProduct: true
-  //       }
-  //     })
-  //     if(!valueAttr.attrProduct.hasImage){
-  //       throw new BadRequestException('Can not upload image for this value')
-  //     }
-  //     await this.imageService.delete(valueAttr.imageId, queryRunner)
-  //     const newImage = await this.imageService.create(image, undefined, queryRunner)
-  //     await this.productService.updateAttrValue(
-  //       valueAttr.id,
-  //       { imageId: newImage.id },
-  //       queryRunner,
-  //     );
-
-  //     await queryRunner.commitTransaction()
-  //     return {message: 'Update image successfully'}
-  //   } catch (error) {
-  //     await queryRunner.rollbackTransaction()
-  //     throw error
-  //   } finally{
-  //     await queryRunner.release()
-  //   }
-  // }
 }
-
-

@@ -49,9 +49,9 @@ export class User extends PatternEntity {
   @Column({unique: true})
   email: string
 
-  @Column({ nullable: true })
-  @Exclude()
-  currentHashedRefreshToken: string;
+  // @Column({ nullable: true })
+  // @Exclude()
+  // currentHashedRefreshToken: string;
 
   @Column( {enum:AuthBy, type: 'enum', default: AuthBy.LOCAL})
   authBy: AuthBy

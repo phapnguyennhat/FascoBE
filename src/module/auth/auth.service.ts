@@ -16,13 +16,7 @@ export class AuthService {
   ){}
 
   
-  async setCurrentRefreshToken(refreshToken: string, authorId: string) {
-    const currentHashedRefreshToken = await bcrypt.hash(refreshToken, 10);
 
-    return this.userService.update(authorId, {
-      currentHashedRefreshToken,
-    });
-  }
 
   getCookieForLogOut() {
     return [

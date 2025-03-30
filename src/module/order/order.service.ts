@@ -1,4 +1,4 @@
-import {  ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {  ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EStatusOrder, Order } from 'src/database/entity/order.entity';
 import { DataSource,  QueryRunner, Repository } from 'typeorm';
@@ -7,12 +7,18 @@ import { UpdateOrderDto } from './dto/updateOrder.dto';
 import { ERole, User } from 'src/database/entity/user.entity';
 import { Varient } from 'src/database/entity/varient.entity';
 import { CreateOrder } from './dto/createOrder.dto';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { REDIS_MANAGER } from 'src/common/constant';
+import Redis from 'ioredis';
 
 @Injectable()
 export class OrderService {
   constructor(
     @InjectRepository(Order) private readonly orderRepo: Repository<Order>,
-    private readonly dataSource :DataSource
+    private readonly dataSource: DataSource,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    @Inject(REDIS_MANAGER) private readonly redisManager: Redis,
   ) {}
 
   async createOrder(createOrder: CreateOrder, queryRunner?: QueryRunner) {
@@ -22,19 +28,15 @@ export class OrderService {
     return this.orderRepo.save(createOrder);
   }
 
-
-
   async getOrderByUserId(userId: string, query: QueryOrderDto) {
-    let { page, limit, status } = query;
-    page = page || 1;
-    limit = limit || 9;
+    let { page = 1, limit = 9, status } = query;
 
     if (status) {
       const [orders, count] = await this.orderRepo.findAndCount({
         where: { userId, status },
         order: { createAt: 'DESC' },
-        skip: (page-1)* limit,
-        take: limit
+        skip: (page - 1) * limit,
+        take: limit,
       });
       return { orders, count };
     }
@@ -42,31 +44,29 @@ export class OrderService {
     const [orders, count] = await this.orderRepo.findAndCount({
       where: { userId },
       order: { createAt: 'DESC' },
-      skip: (page-1)* limit,
-      take: limit
+      skip: (page - 1) * limit,
+      take: limit,
     });
     return { orders, count };
   }
 
-  async getAllOrder( query: QueryOrderDto) {
-    let { page, limit, status } = query;
-    page = page || 1;
-    limit = limit || 9;
+  async getAllOrder(query: QueryOrderDto) {
+    let { page = 1, limit = 9, status } = query;
 
     if (status) {
       const [orders, count] = await this.orderRepo.findAndCount({
-        where: {  status },
+        where: { status },
         order: { createAt: 'DESC' },
-        skip: (page-1)* limit,
-        take: limit
+        skip: (page - 1) * limit,
+        take: limit,
       });
       return { orders, count };
     }
 
     const [orders, count] = await this.orderRepo.findAndCount({
       order: { createAt: 'DESC' },
-      skip: (page-1)* limit,
-      take: limit
+      skip: (page - 1) * limit,
+      take: limit,
     });
     return { orders, count };
   }
@@ -75,7 +75,7 @@ export class OrderService {
     return this.orderRepo.findOneBy({ userId, id });
   }
 
-  async getOrderById(id: string, user:User) {
+  async getOrderById(id: string, user: User) {
     const queryBuilder = this.orderRepo
       .createQueryBuilder('order')
       .andWhere('order.id=:id', { id })
@@ -127,69 +127,114 @@ export class OrderService {
     if (!order) {
       throw new NotFoundException('Order not found');
     }
-     if (user.role === ERole.USER) {
-       if (user.id !== order.userId) {
-         throw new ForbiddenException('This is not your order 🥲');
-       }
-       return order;
-     }
-     return order;
+    if (user.role === ERole.USER) {
+      if (user.id !== order.userId) {
+        throw new ForbiddenException('This is not your order 🥲');
+      }
+      return order;
+    }
+    return order;
   }
 
-
-
-  async updateOrder(id:string,updateOrderDto :UpdateOrderDto, queryRunner?:QueryRunner){
-    if(queryRunner){
-      return queryRunner.manager.update(Order,id, updateOrderDto)
+  async updateOrder(
+    id: string,
+    updateOrderDto: UpdateOrderDto,
+    queryRunner?: QueryRunner,
+  ) {
+    if (queryRunner) {
+      return queryRunner.manager.update(Order, id, updateOrderDto);
     }
-    return this.orderRepo.update(id, updateOrderDto)
+    return this.orderRepo.update(id, updateOrderDto);
   }
 
-  async cancelOrder (order:Order){
-
-    if(order.status !== EStatusOrder.PENDING){
-      throw new ForbiddenException("Not allow set order's status is cancel whose status is not pending ")
+  async cancelOrder(order: Order) {
+    if (order.status !== EStatusOrder.PENDING) {
+      throw new ForbiddenException(
+        "Not allow set order's status is cancel whose status is not pending ",
+      );
     }
-    const orderItems = order.orderItems
-    const queryRunner = this.dataSource.createQueryRunner()
+    const orderItems = order.orderItems;
+    const queryRunner = this.dataSource.createQueryRunner();
 
     try {
-          await queryRunner.connect()
-          await queryRunner.startTransaction()
-    
-          await Promise.all(orderItems.map( async( orderItem)=>{
-            const {quantity, varient} = orderItem
-            const {id: variantId,sold: variantSold, pieceAvail:variantPieceAvail } = varient
-    
-            await queryRunner.manager.update(Varient, variantId, {sold: variantSold-quantity, pieceAvail: variantPieceAvail+quantity})
-            await this.updateOrder(order.id, {status: EStatusOrder.CANCEL}, queryRunner)
-          }))
-    
-          await queryRunner.commitTransaction()
-          return {
-            message: 'Cancel order successfully'
-          }
-        } catch (error) {
-          await queryRunner.rollbackTransaction()
-          throw error
-        } finally{
-          await queryRunner.release()
-        }
-  }
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
 
-  async shippingOrder(order: Order){
-    if(order.status !== EStatusOrder.PENDING){
-      throw new ForbiddenException("Not allow set order's status is shipping whose status is not pending ")
+      await Promise.all(
+        orderItems.map(async (orderItem) => {
+          const { quantity, varient } = orderItem;
+          const {
+            id: variantId,
+            sold: variantSold,
+            pieceAvail: variantPieceAvail,
+          } = varient;
+
+          await queryRunner.manager.update(Varient, variantId, {
+            sold: variantSold - quantity,
+            pieceAvail: variantPieceAvail + quantity,
+          });
+          await this.updateOrder(
+            order.id,
+            { status: EStatusOrder.CANCEL },
+            queryRunner,
+          );
+        }),
+      );
+
+      await queryRunner.commitTransaction();
+      await this.clearCacheOrder(order)
+      await Promise.all(orderItems.map(async(orderItem) => {
+        this.cacheManager.del(`product-detail:${orderItem.varient.product.id}:admin`);
+        const keys = await this.redisManager.keys(`product-detail:${orderItem.varient.product.id}:varient:*`)
+        await this.cacheManager.mdel(keys)
+      } ))
+
+
+      return {
+        message: 'Cancel order successfully',
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
-    return this.orderRepo.update(order.id, {status: EStatusOrder.SHIPPING})
   }
 
-  async completeOrder(order:Order){
-    if(order.status!== EStatusOrder.SHIPPING){
-      throw new ForbiddenException("Not allow set order's status is complete whose status is not shipping ")
+  async shippingOrder(order: Order) {
+    if (order.status !== EStatusOrder.PENDING) {
+      throw new ForbiddenException(
+        "Not allow set order's status is shipping whose status is not pending ",
+      );
     }
-    return this.orderRepo.update(order.id, {status: EStatusOrder.COMPLETE})
+    const result = await this.orderRepo.update(order.id, { status: EStatusOrder.SHIPPING });
+    await this.clearCacheOrder(order)
+    return result
   }
 
-  
+  async completeOrder(order: Order) {
+    if (order.status !== EStatusOrder.SHIPPING) {
+      throw new ForbiddenException(
+        "Not allow set order's status is complete whose status is not shipping ",
+      );
+    }
+    const result = await this.orderRepo.update(order.id, { status: EStatusOrder.COMPLETE });
+    await this.clearCacheOrder(order)
+    return result
+  }
+
+  async clearCacheOrder(order: Order) {
+    const [keySearchAdmin, keySearchUser] = await Promise.all([
+      this.redisManager.keys('admin:order-search:*'),
+      this.redisManager.keys(`user-detail:${order.userId}:order-search:*`),
+    ]);
+    await Promise.all([
+      this.cacheManager.mdel(keySearchAdmin),
+      this.cacheManager.mdel(keySearchUser),
+      this.cacheManager.del(
+        `user-detail:${order.userId}:order-detail:${order.id}`,
+      ),
+    ]);
+
+  }
 }

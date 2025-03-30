@@ -1,3 +1,4 @@
+import { SearchParams } from "src/common/searchParams";
 import { Varient } from "src/database/entity/varient.entity";
 import { CreateVarientDto } from "src/module/product/dto/createVarient.dto";
 
@@ -31,3 +32,11 @@ export function getPriceVarient(varient: Varient){
   return varient.price
 }
 
+
+export function genKeyQuery(query: SearchParams) {
+  const sortedQuery = Object.keys(query)
+  .sort() // Sắp xếp key theo thứ tự alphabet
+  .map((key) => `${key}=${query[key]}`)
+    .join('&'); // Tạo lại chuỗi query string
+  return sortedQuery
+}

@@ -41,7 +41,6 @@ export class FacebookAuthService {
 
   async getCookiesForUser(user: User){
     const [accessTokenCookie, refreshTokenCookie]  = await Promise.all([this.authService.getCookieWithJwtAccessToken(user.id), this.authService.getCookieWithJwtRefreshToken(user.id)])
-    await this.authService.setCurrentRefreshToken(refreshTokenCookie.token, user.id);
 
     return {
       accessTokenCookie, refreshTokenCookie

@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, HttpCode, HttpStatus, NotFoundException, Post, Put, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, HttpCode, HttpStatus, Inject, NotFoundException, Post, Put, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UserService } from '../user/user.service';
 import { RegisterDto } from './dto/register.dto';
@@ -14,6 +14,11 @@ import { ConfirmDto } from './dto/confirm.dto';
 import { ResetPasswordDto } from './dto/resetPassword.dto';
 import  moment from 'moment-timezone';
 import JwtResetPasswordGuard from './guard/jwtResetPassword.guard';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { ConfigService } from '@nestjs/config';
+import RequestWithUser from 'src/common/requestWithUser.interface';
+import { JwtService } from '@nestjs/jwt';
 
 
 @Controller('auth')
@@ -22,6 +27,10 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly userService: UserService,
     private readonly emailService: EmailService,
+    private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+
   ) {}
 
   @Post('/register')
@@ -36,8 +45,16 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('/logout')
   @HttpCode(HttpStatus.OK)
-  async logout(@Req() request) {
-    await this.userService.removeRefreshToken(request.user.id);
+  async logout(@Req() request: RequestWithUser) {
+    const refreshToken = request.cookies.Refresh
+    const { exp } = this.jwtService.decode(refreshToken)
+    const now = Math.floor(Date.now() / 1000);
+    const ttl = exp - now;
+    
+    if (ttl > 0) {
+      await this.cacheManager.set(`blacklist:${refreshToken}`,true, ttl*1000)
+    }
+
     request.res.setHeader('Set-Cookie', this.authService.getCookieForLogOut());
     return { message: 'Đăng xuất thành công' };
   }
@@ -50,10 +67,7 @@ export class AuthController {
       await this.authService.getCookieWithJwtAccessToken(req.user?.id);
     const refreshTokenCookie =
       await this.authService.getCookieWithJwtRefreshToken(req.user?.id);
-    await this.authService.setCurrentRefreshToken(
-      refreshTokenCookie.token,
-      req.user?.id,
-    );
+   
 
     req.res.setHeader('Set-Cookie', [
       accessTokenCookie.cookie,
@@ -94,7 +108,9 @@ export class AuthController {
       );
     }
 
-    return this.userService.updatePassword(req.user.id, updatePasswordDto);
+    const result = await this.userService.updatePassword(req.user.id, updatePasswordDto);
+    await this.cacheManager.del(`user-detail:${req.user.id}`)
+    return result
   }
 
   @Post('resetPassword/code')
@@ -110,26 +126,28 @@ export class AuthController {
       throw new NotFoundException('Not found user');
     }
     await this.userService.genCode(email, code, formatDate);
-    await this.emailService.sendCodeResetPassword(user.name,user.email,code )
+    await this.emailService.sendCodeResetPassword(user.name, user.email, code)
+    await this.cacheManager.del(`user-detail:${user.id}`)
     return { message: 'Send code successfully' };
   }
 
   @Post('resetPassword/confirm')
   async getTokenResetPassword(@Req() req ,@Body() { email, code }: ConfirmDto) {
     
-
     const resetPasswordCookie = await  this.authService.verifyCode(email, code);
     req.res.setHeader('Set-Cookie', resetPasswordCookie.cookie);
+    await this.cacheManager.del(`user-detail:${req.user.id}`)
     return resetPasswordCookie
     
   }
 
   @Post('resetPassword')
   @UseGuards(JwtResetPasswordGuard)
-  async resetPassword(@Body() {  password }: ResetPasswordDto, @Req() req) {
+  async resetPassword(@Body() {  password }: ResetPasswordDto, @Req() req: RequestWithUser) {
     const hashedPassword = await bcrypt.hash(password, 10);
     await this.authService.resetPassword(req.user, hashedPassword);
-    const removeCookie =  'ResetPassword=; HttpOnly; Path=/; Max-Age=0'
+    const removeCookie = 'ResetPassword=; HttpOnly; Path=/; Max-Age=0'
+    await this.cacheManager.del(`user-detail:${req.user.id}`)
     req.res.setHeader('Set-Cookie',removeCookie);
     return {message: 'reset password successfully'}
   }

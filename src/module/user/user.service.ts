@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthBy, User } from 'src/database/entity/user.entity';
 import { QueryRunner, Repository } from 'typeorm';
@@ -9,6 +9,8 @@ import * as bcrypt from 'bcrypt'
 import { Profile } from '../facebook-auth/response/profile';
 import { UpdatePasswordDto } from '../auth/dto/updatePassword.dto';
 import dayjs from 'dayjs';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 
 
@@ -17,6 +19,8 @@ import dayjs from 'dayjs';
 export class UserService {
   constructor(
     @InjectRepository(User) private readonly userRepo: Repository<User>,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+   
   ) {}
   
   async create(createUserDto: CreateUserDto) {
@@ -45,20 +49,21 @@ export class UserService {
   }
 
   async getByUsername(username: string) {
+
     return this.userRepo.findOneBy({ username });
   }
 
   async getById(id: string) {
-    return this.userRepo.findOneBy({ id });
+    return this.cacheManager.wrap(`user-detail:${id}`, ()=>this.userRepo.findOneBy({id}))
   }
 
 
 
-  async removeRefreshToken(authorId: string) {
-    return this.userRepo.update(authorId, {
-      currentHashedRefreshToken: null,
-    });
-  }
+  // async removeRefreshToken(authorId: string) {
+  //   return this.userRepo.update(authorId, {
+  //     currentHashedRefreshToken: null,
+  //   });
+  // }
 
   async createWithGoogle(userData: TokenPayload) {
     return this.userRepo.save({
@@ -78,18 +83,18 @@ export class UserService {
 
 
 
-  async getUserIfRefreshTokenMatches(refreshToken: string, userId: string) {
-    const user: User = await this.getById(userId);
+  // async getUserIfRefreshTokenMatches(refreshToken: string, userId: string) {
+  //   const user: User = await this.getById(userId);
 
-    const isRefreshTokenMatching = await bcrypt.compare(
-      refreshToken,
-      user.currentHashedRefreshToken,
-    );
+  //   const isRefreshTokenMatching = await bcrypt.compare(
+  //     refreshToken,
+  //     user.currentHashedRefreshToken,
+  //   );
 
-    if (isRefreshTokenMatching) {
-      return user;
-    }
-  }
+  //   if (isRefreshTokenMatching) {
+  //     return user;
+  //   }
+  // }
 
   async updatePassword (userId: string, updatePasswordDto: UpdatePasswordDto){
     const user : User = await this.userRepo.findOneBy({id:userId})

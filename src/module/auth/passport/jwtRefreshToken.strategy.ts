@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
@@ -6,6 +6,8 @@ import { Request } from 'express';
 import { JWT_REFRESH_TOKEN } from 'src/common/constant';
 import { UserService } from 'src/module/user/user.service';
 import { IAuthPayload } from 'src/database/entity/user.entity';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 
 @Injectable()
@@ -16,6 +18,8 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
   constructor(
     private readonly configService: ConfigService,
     private readonly userService: UserService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
@@ -30,9 +34,13 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
 
   async validate(request: Request, payload: IAuthPayload) {
     const refreshToken = request.cookies?.Refresh;
-    return this.userService.getUserIfRefreshTokenMatches(
-      refreshToken,
-      payload.userId,
-    );
+    const isLogout = await this.cacheManager.get(`blacklist:${refreshToken}`)
+
+    if (isLogout) {
+      throw new UnauthorizedException('Token expire')
+    }
+    
+    
+    return this.userService.getById(payload.userId)
   }
 }
