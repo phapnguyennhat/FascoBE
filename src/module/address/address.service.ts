@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Address } from 'src/database/entity/address.entity';
 import { Repository } from 'typeorm';
@@ -25,11 +25,14 @@ export class AddressService {
   }
 
   async findByUserId(userId: string){
-    return this.addressRepo.findOne({where: {userId}, relations: {
+    const address = await this.addressRepo.findOne({where: {userId}, relations: {
       province: true,
       district: true,
       commune: true
-    }})
+    }
+    })
+   
+    return address
   }
 
 

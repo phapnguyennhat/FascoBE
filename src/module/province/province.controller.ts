@@ -24,7 +24,7 @@ export class ProvinceController {
     return this.cacheManager.wrap(`province:${provinceId}:district:${districtId}`, ()=>this.districtService.findById(provinceId, districtId))
   }
 
-  @Get('')
+  @Get('')  
   findAll() { 
     return this.cacheManager.wrap(`province:all`, ()=>this.provinceService.findAll())
   }

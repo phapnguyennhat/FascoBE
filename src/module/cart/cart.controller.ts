@@ -24,11 +24,7 @@ import Redis from 'ioredis';
 
 @Controller('cart')
 export class CartController {
-  constructor(
-    private readonly cartService: CartService,
-    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-    @Inject('REDIS_MANAGER') private readonly redisManager: Redis,
-  ) {}
+  constructor(private readonly cartService: CartService) {}
 
   @Post()
   @UseGuards(RoleGuard(ERole.USER))
@@ -42,18 +38,13 @@ export class CartController {
       userId: req.user.id,
     });
 
-    await this.cacheManager.del(`cart:${req.user.id}`);
     return result;
   }
 
   @Get()
   @UseGuards(JwtAuthGuard)
   async getCart(@Req() req) {
-    return this.cacheManager.wrap(
-      `cart:${req.user.id}`,
-      () => this.cartService.getCartByUserId(req.user.id),
-      5 * 60 * 1000,
-    );
+    return this.cartService.getCartByUserId(req.user.id);
   }
 
   @Put(':id')
@@ -68,7 +59,6 @@ export class CartController {
       req.user.id,
       updateCartItemDto,
     );
-    await this.cacheManager.del(`cart:${req.user.id}`);
     return result;
   }
 
@@ -76,7 +66,6 @@ export class CartController {
   @UseGuards(JwtAuthGuard)
   async deleteCartItem(@Req() req, @Param() { id }: IdParam) {
     const result = this.cartService.deleteCartItem(id, req.user.id);
-    await this.cacheManager.del(`cart:${req.user.id}`);
     return result;
   }
 }

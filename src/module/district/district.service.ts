@@ -15,6 +15,11 @@ export class DistrictService {
       relations: {
         communes: true,
       },
+      order: {
+        communes: {
+          name: 'ASC'
+        }
+      }
      
     });
     if (!district) {

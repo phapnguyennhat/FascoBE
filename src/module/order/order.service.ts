@@ -18,7 +18,7 @@ export class OrderService {
     @InjectRepository(Order) private readonly orderRepo: Repository<Order>,
     private readonly dataSource: DataSource,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-    @Inject(REDIS_MANAGER) private readonly redisManager: Redis,
+    @Inject(REDIS_MANAGER) private readonly redisManager : Redis,
   ) {}
 
   async createOrder(createOrder: CreateOrder, queryRunner?: QueryRunner) {
@@ -182,13 +182,10 @@ export class OrderService {
       );
 
       await queryRunner.commitTransaction();
-      await this.clearCacheOrder(order)
-      await Promise.all(orderItems.map(async(orderItem) => {
-        this.cacheManager.del(`product-detail:${orderItem.varient.product.id}:admin`);
-        const keys = await this.redisManager.keys(`product-detail:${orderItem.varient.product.id}:varient:*`)
+      await Promise.all(orderItems.map(async (cartItem) => {
+        const keys = await this.redisManager.keys(`product-detail:${cartItem.varient.product.id}:*`)
         await this.cacheManager.mdel(keys)
-      } ))
-
+      }))
 
       return {
         message: 'Cancel order successfully',
@@ -208,7 +205,6 @@ export class OrderService {
       );
     }
     const result = await this.orderRepo.update(order.id, { status: EStatusOrder.SHIPPING });
-    await this.clearCacheOrder(order)
     return result
   }
 
@@ -219,22 +215,7 @@ export class OrderService {
       );
     }
     const result = await this.orderRepo.update(order.id, { status: EStatusOrder.COMPLETE });
-    await this.clearCacheOrder(order)
     return result
   }
 
-  async clearCacheOrder(order: Order) {
-    const [keySearchAdmin, keySearchUser] = await Promise.all([
-      this.redisManager.keys('admin:order-search:*'),
-      this.redisManager.keys(`user-detail:${order.userId}:order-search:*`),
-    ]);
-    await Promise.all([
-      this.cacheManager.mdel(keySearchAdmin),
-      this.cacheManager.mdel(keySearchUser),
-      this.cacheManager.del(
-        `user-detail:${order.userId}:order-detail:${order.id}`,
-      ),
-    ]);
-
-  }
 }

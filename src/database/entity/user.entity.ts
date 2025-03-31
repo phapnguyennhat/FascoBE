@@ -78,5 +78,4 @@ export class User extends PatternEntity {
   @OneToOne(()=> Image, {eager: true, onDelete: 'SET NULL'})
   @JoinColumn()
   avatar: Image
-
 }

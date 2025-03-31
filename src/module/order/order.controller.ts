@@ -46,7 +46,7 @@ export class OrderController {
     private readonly communeService: CommuneService,
     private readonly addressService: AddressService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-    @Inject(REDIS_MANAGER) private readonly redisManager: Redis,
+    @Inject(REDIS_MANAGER) private readonly redisManager: Redis
   ) {}
 
   @Post('user/order')
@@ -122,26 +122,12 @@ export class OrderController {
       await this.cartService.deleteByUserId(req.user.id, queryRunner);
 
       await queryRunner.commitTransaction();
-
-      // clear order-search
-      const [keySearchAdmin, keySearchUser] = await Promise.all([
-        this.redisManager.keys('admin:order-search:*'),
-        this.redisManager.keys(`user-detail:${req.user.id}:order-search:*`),
-      ]);
-
-      await Promise.all([
-        this.cacheManager.mdel(keySearchAdmin),
-        this.cacheManager.mdel(keySearchUser),
-        this.cacheManager.del(`cart:${req.user.id}`)
-      ]);
-
-      await Promise.all(cartItems.map(async(cartItem) => {
-        this.cacheManager.del(`product-detail:${cartItem.varient.product.id}:admin`);
-        const keys = await this.redisManager.keys(`product-detail:${cartItem.varient.product.id}:varient:*`)
+      // clear cache product-detail
+      await Promise.all(cartItems.map(async (cartItem) => {
+        const keys = await this.redisManager.keys(`product-detail:${cartItem.varient.product.id}:*`)
         await this.cacheManager.mdel(keys)
-      } ))
-      
-      
+      }))
+
       return newOrder;
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -155,24 +141,19 @@ export class OrderController {
   @UseGuards(JwtAuthGuard)
   async getOrder(@Req() req, @Query() query: QueryOrderDto) {
     if (req.user.role === ERole.ADMIN) {
-      return this.cacheManager.wrap(
-        `admin:order-search:${genKeyQuery(query as any) || 'admin'}`,
-        () => this.orderService.getAllOrder(query),
-      );
+      
+      return  this.orderService.getAllOrder(query);
+      
     }
-    return this.cacheManager.wrap(
-      `user-detail:${req.user.id}:order-search:${genKeyQuery(query as any) || 'user'}`,
-      () => this.orderService.getOrderByUserId(req.user.id, query),
-    );
+ 
+    return this.orderService.getOrderByUserId(req.user.id, query);
+  
   }
 
   @Get('user/order/:id')
   @UseGuards(JwtAuthGuard)
   async getOrderById(@Req() req, @Param() { id }: IdParam) {
-    return this.cacheManager.wrap(
-      `user-detail:${req.user.id}:order-detail:${id}`,
-      () => this.orderService.getOrderById(id, req.user),
-    );
+    return this.orderService.getOrderById(id, req.user);
   }
 
   @Put('user/order/:id/:status')
@@ -216,7 +197,6 @@ export class OrderController {
       updateAddressDto,
     );
 
-    await this.redisManager.del(`user-detail:${order.userId}:order-detail:${order.id}`)
   
     return result
   }

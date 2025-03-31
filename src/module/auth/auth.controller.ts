@@ -27,7 +27,6 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly userService: UserService,
     private readonly emailService: EmailService,
-    private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
 
@@ -109,7 +108,6 @@ export class AuthController {
     }
 
     const result = await this.userService.updatePassword(req.user.id, updatePasswordDto);
-    await this.cacheManager.del(`user-detail:${req.user.id}`)
     return result
   }
 
@@ -127,7 +125,7 @@ export class AuthController {
     }
     await this.userService.genCode(email, code, formatDate);
     await this.emailService.sendCodeResetPassword(user.name, user.email, code)
-    await this.cacheManager.del(`user-detail:${user.id}`)
+ 
     return { message: 'Send code successfully' };
   }
 
@@ -136,7 +134,7 @@ export class AuthController {
     
     const resetPasswordCookie = await  this.authService.verifyCode(email, code);
     req.res.setHeader('Set-Cookie', resetPasswordCookie.cookie);
-    await this.cacheManager.del(`user-detail:${req.user.id}`)
+  
     return resetPasswordCookie
     
   }
@@ -147,7 +145,6 @@ export class AuthController {
     const hashedPassword = await bcrypt.hash(password, 10);
     await this.authService.resetPassword(req.user, hashedPassword);
     const removeCookie = 'ResetPassword=; HttpOnly; Path=/; Max-Age=0'
-    await this.cacheManager.del(`user-detail:${req.user.id}`)
     req.res.setHeader('Set-Cookie',removeCookie);
     return {message: 'reset password successfully'}
   }

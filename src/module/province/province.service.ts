@@ -18,6 +18,11 @@ export class ProvinceService {
       relations: {
         districts: true,
       },
+      order: {
+        districts: {
+          name: 'ASC'
+        }
+      }
     });
     if (!province) {
       throw new NotFoundException('Không tìm thấy province ');
@@ -26,6 +31,9 @@ export class ProvinceService {
   }
 
   findAll() {
-    return this.provinceRepo.find();
+    return this.provinceRepo.find({
+      order: {
+      name: 'ASC'
+    }});
   }
 }

@@ -471,7 +471,7 @@ export class ProductController {
     @Query() { userId }: { userId: string },
   ) {
     return this.cacheManager.wrap(
-      `product-detail:${id}:${genKeyQuery({ userId })}`,
+      `product-detail:${id}:${genKeyQuery({ userId })||'user'}`,
       () => this.productService.findProductById(id, userId),
     );
   }

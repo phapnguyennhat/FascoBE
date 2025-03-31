@@ -1,5 +1,18 @@
 import { IdParam } from './../../common/validate';
-import { BadRequestException, Body, Controller, Get, HttpStatus, Inject, ParseFilePipeBuilder, Put, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Inject,
+  ParseFilePipeBuilder,
+  Put,
+  Req,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { Request } from 'express';
 import JwtAuthGuard from '../auth/guard/jwt-auth.guard';
@@ -24,7 +37,7 @@ export class UserController {
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   async profile(@Req() req: RequestWithUser) {
-    return req.user
+    return req.user;
   }
 
   @Put()
@@ -35,11 +48,11 @@ export class UserController {
       if (user) {
         throw new BadRequestException('Email has already used');
       }
-      
     }
-  
+
     const result = await this.userService.update(req.user.id, updateUserDto);
     await this.cacheManager.del(`user-detail:${req.user.id}`);
+
     return result;
   }
 
@@ -85,6 +98,7 @@ export class UserController {
 
       await queryRunner.commitTransaction();
       await this.cacheManager.del(`user-detail:${req.user.id}`);
+
       return { message: 'Update avatar successfully' };
     } catch (error) {
       await queryRunner.rollbackTransaction();
