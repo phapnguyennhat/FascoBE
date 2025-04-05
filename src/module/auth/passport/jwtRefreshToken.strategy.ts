@@ -41,6 +41,6 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
     }
     
     
-    return this.userService.getById(payload.userId)
+    return payload;
   }
 }

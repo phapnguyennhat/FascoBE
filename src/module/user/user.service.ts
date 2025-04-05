@@ -1,6 +1,6 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AuthBy, User } from 'src/database/entity/user.entity';
+import { AuthBy, ERole, User } from 'src/database/entity/user.entity';
 import { QueryRunner, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/createUser.dto';
 import { UpdateUserDto } from './dto/updateUser.dto';
@@ -56,9 +56,9 @@ export class UserService {
   }
 
   async getById(id: string) {
-    return this.cacheManager.wrap(`user-detail:${id}`, () =>
-      this.userRepo.findOneBy({ id }),
-    );
+    
+    return this.userRepo.findOneBy({ id });
+   
   }
 
   // async removeRefreshToken(authorId: string) {
@@ -145,5 +145,14 @@ export class UserService {
 
   async changePassword(id: string, password: string) {
     return this.userRepo.update(id, { password, codeExprired: null });
+  }
+
+ 
+  async findAllUserAdmin() {
+    return this.userRepo.find({
+      where: {
+        role: ERole.ADMIN
+      }
+    })
   }
 }

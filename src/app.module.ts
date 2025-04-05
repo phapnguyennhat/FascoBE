@@ -31,7 +31,9 @@ import { CACHE_TTL } from './common/constant';
 import { createKeyv } from '@keyv/redis';
 import { HttpCacheInterceptor } from './common/http-cache.interceptor';
 import { RedisModule } from './module/redis/redis.module';
-import Redis from 'ioredis';
+import { LogModule } from './module/log/log.module';
+import { SocketModule } from './module/socket/socket.module';
+
 
 
 
@@ -74,6 +76,8 @@ import Redis from 'ioredis';
       inject: [ConfigService]
     }),
     RedisModule,
+    LogModule,
+    SocketModule,
   ],
   controllers: [AppController],
   providers: [AppService,

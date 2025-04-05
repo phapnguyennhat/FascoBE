@@ -46,7 +46,11 @@ export class AuthService {
   async getCookieWithJwtAccessToken(authorId: string) {
     const user: User = await this.userService.getById(authorId);
     const payload: IAuthPayload = {
-      userId: user.id,
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar
     };
     const token = this.jwtService.sign(payload);
     const cookie = `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME')}`;
@@ -61,7 +65,11 @@ export class AuthService {
     await this.userService.verifyCode(email, code)
     const user = await this.userService.getByEmail(email)
     const payload: IAuthPayload = {
-      userId: user.id,
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar
     };
     const accessTime = this.configService.get('JWT_CODE_TOKEN_EXPIRATION_TIME') as number
 
@@ -79,9 +87,13 @@ export class AuthService {
   }
 
   async getCookieWithJwtRefreshToken(userId: string) {
-     await this.userService.getById(userId);
+    const user = await this.userService.getById(userId);
     const payload: IAuthPayload = {
-      userId,
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar
     };
     const token = this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_REFRESH_TOKEN_SECRET'),

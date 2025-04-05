@@ -28,10 +28,6 @@ export class JwtResetPasswordStrategy extends PassportStrategy(Strategy, JWT_RES
 
   async validate(payload: IAuthPayload) {
     
-     const user: User = plainToInstance(
-       User,
-       await this.userService.getById(payload.userId),
-     );
-     return user;
+     return payload;
   }
 }

@@ -26,7 +26,11 @@ export enum ERole {
 }
 
 export interface IAuthPayload {
-  userId: string
+  id: string
+  name: string,
+  email: string,
+  role: ERole,
+  avatar: Image
 }
 
 @Entity()
