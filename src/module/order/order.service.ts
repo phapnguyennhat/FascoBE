@@ -153,7 +153,7 @@ export class OrderService {
         "Not allow set order's status is cancel whose status is not pending ",
       );
     }
-    const orderItems = order.orderItems;
+    const orderItems = order.orderItems||[];
     const queryRunner = this.dataSource.createQueryRunner();
 
     try {
@@ -173,12 +173,12 @@ export class OrderService {
             sold: variantSold - quantity,
             pieceAvail: variantPieceAvail + quantity,
           });
-          await this.updateOrder(
-            order.id,
-            { status: EStatusOrder.CANCEL },
-            queryRunner,
-          );
         }),
+      );
+      await this.updateOrder(
+        order.id,
+        { status: EStatusOrder.CANCEL },
+        queryRunner,
       );
 
       await queryRunner.commitTransaction();

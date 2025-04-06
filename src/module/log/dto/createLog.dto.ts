@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString } from "class-validator"
+import { IsNotEmpty, IsString } from "class-validator"
 
 export class CreateLogDto {
     @IsNotEmpty()
@@ -7,7 +7,7 @@ export class CreateLogDto {
 
 
     // if receiverId is not provided, it will be sent to all admins
-    @IsOptional()
+    @IsNotEmpty()
     @IsString()
     receiverId: string
 

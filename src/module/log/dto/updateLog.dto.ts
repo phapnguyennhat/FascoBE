@@ -4,6 +4,5 @@ import { IsBoolean, IsOptional } from "class-validator";
 export class UpdateLogDto {
     @IsOptional()
     @IsBoolean()
-    @Transform(({value})=> value === 'true')
     hasRead: boolean
 }

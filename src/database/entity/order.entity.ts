@@ -24,7 +24,6 @@ export interface TotalOrder {
 @Entity()
 export class Order extends PatternEntity{
   @Column()
-  @Exclude()
   userId: string
 
   @Column({

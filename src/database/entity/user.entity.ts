@@ -30,7 +30,9 @@ export interface IAuthPayload {
   name: string,
   email: string,
   role: ERole,
+  username: string,
   avatar: Image
+  exp?: number
 }
 
 @Entity()

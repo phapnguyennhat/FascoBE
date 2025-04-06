@@ -159,14 +159,17 @@ export class OrderController {
   @Put('user/order/:id/:status')
   @UseGuards(JwtAuthGuard)
   async updateStatus(@Req() req, @Param() { id, status }: ParamUpdateOrder) {
-    const order = await this.orderService.getOrderById(id, req.user);
+    const order = await this.orderService.getOrderById(id, req.user)
 
     if (status === EStatusOrder.CANCEL) {
-      return this.orderService.cancelOrder(order);
+      if (order.userId === req.user.id || req.user.role === ERole.ADMIN) { 
+        return this.orderService.cancelOrder(order);
+      }
     } else if (
       status === EStatusOrder.SHIPPING &&
       req.user.role === ERole.ADMIN
     ) {
+     
       return this.orderService.shippingOrder(order);
     } else if (
       status === EStatusOrder.COMPLETE &&

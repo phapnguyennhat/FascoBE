@@ -9,5 +9,6 @@ import { UserModule } from '../user/user.module';
   imports: [TypeOrmModule.forFeature([Log]), UserModule],
   controllers: [LogController],
   providers: [LogService],
+  exports: [LogService]
 })
 export class LogModule {}

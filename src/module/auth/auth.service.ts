@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -6,13 +6,18 @@ import { IAuthPayload, User } from 'src/database/entity/user.entity';
 import * as bcrypt from 'bcrypt';
 import { isEmail } from 'class-validator';
 import dayjs from 'dayjs';
+import { Socket } from 'socket.io';
+import { parse } from 'cookie';
+import { Cache } from 'cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 
 @Injectable()
 export class AuthService {
   constructor(private readonly userService: UserService,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
   ){}
 
   
@@ -49,6 +54,7 @@ export class AuthService {
       id: user.id,
       name: user.name,
       email: user.email,
+      username: user.username,
       role: user.role,
       avatar: user.avatar
     };
@@ -68,6 +74,7 @@ export class AuthService {
       id: user.id,
       name: user.name,
       email: user.email,
+      username: user.username,
       role: user.role,
       avatar: user.avatar
     };
@@ -93,6 +100,7 @@ export class AuthService {
       name: user.name,
       email: user.email,
       role: user.role,
+      username: user.username,
       avatar: user.avatar
     };
     const token = this.jwtService.sign(payload, {
@@ -114,7 +122,61 @@ export class AuthService {
     }else{
       throw new BadRequestException('Token is used already')
     }
-        
-  
+  }
+
+
+  getUserBySocket(socket: Socket) {
+    const cookie = socket.handshake.headers.cookie || '';
+    const { Refresh: refreshToken } = parse(cookie);
+    const payload: IAuthPayload = this.jwtService.decode(refreshToken);
+
+    if (!payload) {
+      socket.disconnect();
+      return;
+    }
+    if (!payload.id) {
+      socket.disconnect();
+      return;
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+    const ttl = payload.exp - now;
+
+    if (ttl <= 0) {
+      socket.disconnect();
+      return;
+    }
+    return payload;
+  }
+
+  async handleConnection(socket: Socket) {
+    const cookie = socket.handshake.headers.cookie || '';
+    const { Refresh: refreshToken } = parse(cookie);
+    const payload: IAuthPayload = this.jwtService.decode(refreshToken);
+
+    if (!payload) {
+      socket.disconnect();
+      return;
+    }
+    if (!payload.id) {
+      socket.disconnect();
+      return;
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+    const ttl = payload.exp - now;
+
+    if (ttl <= 0) {
+      socket.disconnect();
+      return;
+    }
+    console.log(`✅ User ${payload.name} connect to server`);
+    await this.cacheManager.set(`socket:${payload.id}`, socket.id, ttl*1000);
+  }
+
+  async handleDisconnect(socket: Socket) {
+    const payload = this.getUserBySocket(socket);
+    console.log(`❌ User ${payload.name} disconnect server`);
+    await this.cacheManager.del(`socket:${payload.id}`);
   }
 }
