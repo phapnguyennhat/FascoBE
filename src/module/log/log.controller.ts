@@ -18,7 +18,7 @@ export class LogController {
   @Put(':id')
   @UseGuards(JwtAuthGuard)
   async updateLog(@Req() req, @Param('id') id: string, @Body() updateLogDto: UpdateLogDto) { 
-    console.log({updateLogDto})
+  
     const log = await this.logService.getLogById(id)
     if(log.receiverId !== req.user.id) {
       throw new ForbiddenException('You are not allowed to update this log')

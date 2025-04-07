@@ -24,18 +24,11 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: configService.get('FRONTEND_URL'), // allow other origin access to API
+    origin: [configService.get('FRONTEND_URL'), 'http://localhost:3000'], // allow other origin access to API
     credentials: true, //Access-Control-Allow-Credentials: true response header.
+
   });
 
-  app.use(function (request: Request, response: Response, next: NextFunction) {
-    response.setHeader(
-      'Access-Control-Allow-Origin',
-      configService.get('FRONTEND_URL'),
-    );
-    next();
-  });
-  
   await app.listen(configService.get('PORT'));
 
 }
