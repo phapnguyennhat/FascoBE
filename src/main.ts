@@ -26,7 +26,8 @@ async function bootstrap() {
   app.enableCors({
     origin: [configService.get('FRONTEND_URL'), 'http://localhost:3000'], // allow other origin access to API
     credentials: true, //Access-Control-Allow-Credentials: true response header.
-
+    allowedHeaders: ['Authorization', 'Content-Type'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   });
 
   await app.listen(configService.get('PORT'));

@@ -59,7 +59,7 @@ export class AuthService {
       avatar: user.avatar
     };
     const token = this.jwtService.sign(payload);
-    const cookie = `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME')}`;
+    const cookie = `Authentication=${token}; Secure; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME')}; SameSite=None`;
     return {
       token,
       accessTime: this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME'),
@@ -107,7 +107,7 @@ export class AuthService {
       secret: this.configService.get('JWT_REFRESH_TOKEN_SECRET'),
       expiresIn: `${this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME')}s`,
     });
-    const cookie = `Refresh=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME')}`;
+      const cookie = `Refresh=${token}; Secure; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME')}; SameSite=None`;
     return {
       cookie,
       accessTime: this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME'),
