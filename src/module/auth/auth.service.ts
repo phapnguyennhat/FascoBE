@@ -59,7 +59,7 @@ export class AuthService {
       avatar: user.avatar
     };
     const token = this.jwtService.sign(payload);
-    const cookie = `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME')}; SameSite=None`;
+    const cookie = `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME')}; SameSite=None; Secure`;
     return {
       token,
       accessTime: this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION_TIME'),
@@ -84,7 +84,7 @@ export class AuthService {
       secret: this.configService.get('JWT_CODE_TOKEN_SECRET'),
       expiresIn: `${accessTime}s`,
     })
-    const cookie = `ResetPassword=${token}; HttpOnly; Path=/; Max-Age=${accessTime}`;
+    const cookie = `ResetPassword=${token}; HttpOnly; Path=/; Max-Age=${accessTime}; SameSite=None; Secure`;
     return {
       token,
       accessTime,
@@ -107,7 +107,7 @@ export class AuthService {
       secret: this.configService.get('JWT_REFRESH_TOKEN_SECRET'),
       expiresIn: `${this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME')}s`,
     });
-      const cookie = `Refresh=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME')}; SameSite=None`;
+      const cookie = `Refresh=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME')}; SameSite=None; Secure`;
     return {
       cookie,
       accessTime: this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION_TIME'),
