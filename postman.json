@@ -1,0 +1,1475 @@
+{
+	"info": {
+		"_postman_id": "a550fcb4-bf0a-427a-ba6c-bb2a921f40b6",
+		"name": "Fasco BE",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "36147777"
+	},
+	"item": [
+		{
+			"name": "Product",
+			"item": [
+				{
+					"name": "Attr Product",
+					"item": [
+						{
+							"name": "Value",
+							"item": [
+								{
+									"name": "update image value",
+									"request": {
+										"method": "PUT",
+										"header": [],
+										"body": {
+											"mode": "formdata",
+											"formdata": [
+												{
+													"key": "image",
+													"type": "file",
+													"src": "/C:/Users/nguye/OneDrive/Hình ảnh/Saved Pictures/product/watch-blue.webp"
+												}
+											]
+										},
+										"url": {
+											"raw": "{{host}}/product/value/fce57fab-ffd9-46b9-8650-dd875e77548b/image",
+											"host": [
+												"{{host}}"
+											],
+											"path": [
+												"product",
+												"value",
+												"fce57fab-ffd9-46b9-8650-dd875e77548b",
+												"image"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "create AttrProduct",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"createAttrProducts\": [\r\n        {\r\n            \"name\": \"Size\",\r\n            \"hasImage\": false\r\n        },\r\n        {\r\n            \"name\": \"Color\",\r\n            \"hasImage\": true\r\n        }\r\n    ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{host}}/product/9a936289-2b44-4d0b-a1ba-e7da38f67a69/attrProduct",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"product",
+										"9a936289-2b44-4d0b-a1ba-e7da38f67a69",
+										"attrProduct"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Varient",
+					"item": [
+						{
+							"name": "get varient",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/product/362dd1df-40e9-401a-be07-caa65f87c66f/varient?Color=Black",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"product",
+										"362dd1df-40e9-401a-be07-caa65f87c66f",
+										"varient"
+									],
+									"query": [
+										{
+											"key": "Color",
+											"value": "Black"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Men's Jacket Thin Jacket Sports Jacket Large Size Windproof Jacket Flight Jacket\",\r\n    \r\n    \"categoryName\": \"Men's Fashion\",\r\n    \"tags\": [\r\n        {\r\n            \"name\": \"Fashion\"\r\n        },\r\n        {\r\n            \"name\": \"Sweater\"\r\n        }\r\n    ],\r\n    \"brandId\": \"5434f3cc-53ee-4f59-8e7d-cd02554b021f\",\r\n    \"attrProducts\": [\r\n        {\r\n            \"name\": \"Color\",\r\n            \"hasImage\": true,\r\n            \"valueAttrs\": [\r\n                {\r\n                    \"value\": \"Gray\"\r\n                },\r\n                {\r\n                    \"value\": \"Khaki\"\r\n                }\r\n            ]\r\n        },\r\n        {\r\n            \"name\": \"Size\",\r\n            \"hasImage\": false,\r\n            \"valueAttrs\": [\r\n                {\r\n                    \"value\": \"M\"\r\n                },\r\n                {\r\n                    \"value\": \"L\"\r\n                }\r\n            ]\r\n        }\r\n    ],\r\n    \"createVarientDtos\": [\r\n        {\r\n            \"pieceAvail\": 100,\r\n            \"price\": 20.76,\r\n            \"attrValueNames\": [\r\n                \"Gray\", \"M\"\r\n            ]\r\n        },\r\n         {\r\n            \"pieceAvail\": 100,\r\n            \"price\": 20.76,\r\n            \"attrValueNames\": [\r\n                \"Gray\", \"L\"\r\n            ]\r\n        },\r\n         {\r\n            \"pieceAvail\": 100,\r\n            \"price\": 20.76,\r\n            \"attrValueNames\": [\r\n                \"Khaki\", \"M\"\r\n            ]\r\n        },\r\n         {\r\n            \"pieceAvail\": 100,\r\n            \"price\": 20.77,\r\n            \"attrValueNames\": [\r\n                \"Khaki\", \"L\"\r\n            ]\r\n        }\r\n    ]\r\n   \r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/product",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"product"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Image",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "productImages",
+									"value": "",
+									"type": "file"
+								},
+								{
+									"key": "valueImages",
+									"value": "",
+									"type": "file"
+								},
+								{
+									"key": "stringValueNames",
+									"value": "Gray,Khaki",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{host}}/product/bd5020a2-0629-4bdf-bb07-ecf130c832f7/image",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"product",
+								"bd5020a2-0629-4bdf-bb07-ecf130c832f7",
+								"image"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "find",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/product?limit=6&page=2",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"product"
+							],
+							"query": [
+								{
+									"key": "tagNames",
+									"value": "Hats",
+									"disabled": true
+								},
+								{
+									"key": "brandName",
+									"value": "Louis Vuitton",
+									"disabled": true
+								},
+								{
+									"key": "maxPrice",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "brandName",
+									"value": "Prada",
+									"disabled": true
+								},
+								{
+									"key": "collection",
+									"value": "Deals",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "6"
+								},
+								{
+									"key": "page",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "find by id",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/product/362dd1df-40e9-401a-be07-caa65f87c66f",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"product",
+								"362dd1df-40e9-401a-be07-caa65f87c66f"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete product",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/product/b81382a6-a241-4997-82db-62a0164c78be",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"product",
+								"b81382a6-a241-4997-82db-62a0164c78be"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update product",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"haha\",\r\n    \"categoryName\": \"Men's Fashion\",\r\n    \r\n    \"tags\": [\r\n        {\r\n            \"name\": \"Sandal\"\r\n        }\r\n    ],\r\n    \"brandId\": \"ab49bf11-d6a6-4d4f-8e2b-e213580b7798\",\r\n    \"updateAttrProductDtos\": [\r\n        \r\n         {\r\n            \"id\": \"406e6700-e194-49d8-82b9-5b25657f97f0\",\r\n            \"name\": \"Color\",\r\n            \"updateValueAttrDtos\": [\r\n                {\r\n                    \"id\": \"0aad7f2b-a70f-4fc0-bbc3-0e0fb6982392\",\r\n                    \"value\": \"Brown\"\r\n                }\r\n            ]\r\n         }\r\n       \r\n    ],\r\n    \"updateVarientDtos\": [\r\n        {\r\n            \"id\": \"9b392d05-105b-4b10-8ae5-28b6c26df3f4\",\r\n            \"pieceAvail\": \"100\",\r\n            \"price\": \"2.90\",\r\n            \"discountPrice\": \"2.00\"\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/product/362dd1df-40e9-401a-be07-caa65f87c66f",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"product",
+								"362dd1df-40e9-401a-be07-caa65f87c66f"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "find product detail by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/product/bd5020a2-0629-4bdf-bb07-ecf130c832f7/detail",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"product",
+								"bd5020a2-0629-4bdf-bb07-ecf130c832f7",
+								"detail"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete product image",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/product/bd5020a2-0629-4bdf-bb07-ecf130c832f7/image/02d3af2b-f2b9-4a82-8712-daf907ff4bcd",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"product",
+								"bd5020a2-0629-4bdf-bb07-ecf130c832f7",
+								"image",
+								"02d3af2b-f2b9-4a82-8712-daf907ff4bcd"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update image",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "productImages",
+									"value": "",
+									"type": "file"
+								},
+								{
+									"key": "valueImages",
+									"type": "file",
+									"src": "/C:/Users/nguye/OneDrive/Hình ảnh/Saved Pictures/product/acid-dark-blue.webp"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{host}}/product/bd5020a2-0629-4bdf-bb07-ecf130c832f7/image",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"product",
+								"bd5020a2-0629-4bdf-bb07-ecf130c832f7",
+								"image"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"admin\",\r\n    \"username\": \"admin\",\r\n    \"password\": \"admin\",\r\n    \"email\": \"admin@gmail.com\",\r\n    \"role\": \"ADMIN\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/auth/register",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"account\": \"admin\",\r\n    \"password\": \"admin\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/auth/login",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get cookie",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/auth/cookie",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"cookie"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Google auth",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"credential\": \"eyJhbGciOiJSUzI1NiIsImtpZCI6Ijg5Y2UzNTk4YzQ3M2FmMWJkYTRiZmY5NWU2Yzg3MzY0NTAyMDZmYmEiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI3MjYxNDc5NDU1ODktcTB0cjE4amVsY3Q5MWlkbmluZmpjYjcxbDk4dW51amouYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI3MjYxNDc5NDU1ODktcTB0cjE4amVsY3Q5MWlkbmluZmpjYjcxbDk4dW51amouYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMDA2MzA0MzIyMjY1MjY2NTY1MDUiLCJlbWFpbCI6Im5ndXllbm5oYXRwaGFwYnBAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5iZiI6MTczNjM0MDA3NSwibmFtZSI6IlBow6FwIE5ndXnhu4VuIiwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hL0FDZzhvY0tiZHZZMmwzbFBpSmxoMzBTWDdvUkpKYkhnbFJBbE42dW5ZVnZaVGRqSWhOQXM2UT1zOTYtYyIsImdpdmVuX25hbWUiOiJQaMOhcCIsImZhbWlseV9uYW1lIjoiTmd1eeG7hW4iLCJpYXQiOjE3MzYzNDAzNzUsImV4cCI6MTczNjM0Mzk3NSwianRpIjoiY2E4MWVhYjQ5ZDY5ZmZjMTY1ZDRjNTgwNjdhZTU4OTM0YmMwZGE2MSJ9.IOBgvrJ42TipaL1W_93mPwTVQOuenDQ3iBk0_nXbVFAjmI1rZcVPa_d9FbErOw53EhthyzpanmxDkTOunhiriXGrsmRPGmAfs8_QdUrVqd4TzU4o4HOFQsPYHFEHLjsZF_FCQpRgFUo16eINzGU-4ocfRJ0szQgIZsWZPfEq3Xg7Oj52FvRcMdGwVV5BTdNJBS04vFsFYYzoqEF8hfesJ4_9NghsTRdZrlyBmA1e_KUW08yBhho_gxm_Ti1WW8thDXNeFlYLdtGS3Mh0XRn57ZMUW1pB4Gsryg4NVyAW8ieN5SO9YgYUnQVyVHgt6h0K-xlhopELoOavGnbnpjrAHg\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/google-auth",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"google-auth"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "next js google auth",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"credential\": \"eyJhbGciOiJSUzI1NiIsImtpZCI6Ijg5Y2UzNTk4YzQ3M2FmMWJkYTRiZmY5NWU2Yzg3MzY0NTAyMDZmYmEiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI3MjYxNDc5NDU1ODktcTB0cjE4amVsY3Q5MWlkbmluZmpjYjcxbDk4dW51amouYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI3MjYxNDc5NDU1ODktcTB0cjE4amVsY3Q5MWlkbmluZmpjYjcxbDk4dW51amouYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMDA2MzA0MzIyMjY1MjY2NTY1MDUiLCJlbWFpbCI6Im5ndXllbm5oYXRwaGFwYnBAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5iZiI6MTczNjE3MTMwNiwibmFtZSI6IlBow6FwIE5ndXnhu4VuIiwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hL0FDZzhvY0tiZHZZMmwzbFBpSmxoMzBTWDdvUkpKYkhnbFJBbE42dW5ZVnZaVGRqSWhOQXM2UT1zOTYtYyIsImdpdmVuX25hbWUiOiJQaMOhcCIsImZhbWlseV9uYW1lIjoiTmd1eeG7hW4iLCJpYXQiOjE3MzYxNzE2MDYsImV4cCI6MTczNjE3NTIwNiwianRpIjoiOTk1YzBlNmI0NDgyMzhjN2U5NWQ2MDNlMzcwMDU4MzU3NjFiNzdmYiJ9.h4ux0qYJVlq3Mlp_j_lb_x6Pfz6ywOre39-her3yxWzor86vy6jZvvA28a5RIxm5AXbHlzZXan8AyBwdamNIabLcWDTXLB8lVLlJ-oO0tsG5toIHQeptOXowon1DmJs4KLU-nhENBEh0f8fEhnjWBodUf21LYlqa_wgPU56wnvCreqGOjNC9sOJ9RoZ3qM5YQ0aJI1YCCrO3KgkZBXxfZNi2fuy0RJB0m9KtbZevEvpWknzoXUNq9pN6bvtLQCEN0fekCSR5Yijozl4ROAZIrqbFGwLgYuqvhKl5eaDkgRIlrhVgXAMGKSz5m2B66LWSGK3ay9tEtZhvKFh6xm8wJw\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/google-auth",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"google-auth"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/auth/refresh",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Facebook Auth",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"credential\": \"EAALtGVHZALsoBO6wyGY7XTzZCbfQC3ZBRHbNEZBj9AeFSNMW8b8eClvM3xUWKEhdJwhweiwIzlH3lthnijKxhucCcAkCEgSZCxn4ZC8JPVlWmQ2QGTtvDZCrwE6pm4CZAvY8H1gCrzbpDBEbnvPbOOnCRWZAIAJZAZBAsEKZA04UZCP12zBPQVWlZCEf7ypaO7deSYZCvUw9GqVqitxC1w7cdt2SDsni4g9ZCYpcwNiJPwZDZD\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/facebook-auth",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"facebook-auth"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "change password",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"password\": \"phap123\",\r\n    \"new_password\": \"123456\",\r\n    \"confirm_password\": \"123456\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/auth/change-password",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"change-password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/auth/logout",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "send code reset password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"phap.nguyennhat@hcmut.edu.vn\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/auth/resetPassword/code",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"resetPassword",
+								"code"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "confirm code",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"phap.nguyennhat@hcmut.edu.vn\",\r\n    \"code\": \"810675\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/auth/resetPassword/confirm",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"resetPassword",
+								"confirm"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "reset password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"password\": \"phap123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/auth/resetPassword",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"resetPassword"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "address",
+					"item": [
+						{
+							"name": "get address",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/user/address",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"user",
+										"address"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"fullName\": \"Nguyen Nhat Phap\",\r\n    \"email\": \"phap@gmail.com\",\r\n    \"phoneNumber\": \"+84986242329\",\r\n    \"provinceId\": \"1\",\r\n    \"districtId\": \"1\",\r\n    \"communeId\":\"1\",\r\n    \"street\": \"thon 2\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{host}}/user/address",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"user",
+										"address"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "favorite",
+					"item": [
+						{
+							"name": "create",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/user/favorite/54e78a70-db8c-4cfc-a98a-e2000d48fb92",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"user",
+										"favorite",
+										"54e78a70-db8c-4cfc-a98a-e2000d48fb92"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete abulk",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"productIds\": [\"54e78a70-db8c-4cfc-a98a-e2000d48fb92\"]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{host}}/user/favorite",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"user",
+										"favorite"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "find",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/user/favorite?discount=true",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"user",
+										"favorite"
+									],
+									"query": [
+										{
+											"key": "discount",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Order",
+					"item": [
+						{
+							"name": "Address",
+							"item": [
+								{
+									"name": "update address",
+									"request": {
+										"method": "PUT",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"street\": \"Thon x\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{host}}/user/order/b9fb0dc4-5478-4d58-b6b5-0fea002fa1a7/address/44604561-8d29-44c4-ad9e-44e62645547f",
+											"host": [
+												"{{host}}"
+											],
+											"path": [
+												"user",
+												"order",
+												"b9fb0dc4-5478-4d58-b6b5-0fea002fa1a7",
+												"address",
+												"44604561-8d29-44c4-ad9e-44e62645547f"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "find all",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/user/order?page=1&limit=10",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"user",
+										"order"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "cancel order",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/user/order/4f6113e2-6868-4004-88b0-411ed76029e5/cancel",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"user",
+										"order",
+										"4f6113e2-6868-4004-88b0-411ed76029e5",
+										"cancel"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "find by id",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/user/order/51f15238-720a-4c68-8a72-6ef356c0f01b",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"user",
+										"order",
+										"51f15238-720a-4c68-8a72-6ef356c0f01b"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/user/profile",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"user",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"nguyen nhat phap\",\r\n    \"phoneNumber\": \"+84986242329\",\r\n    \"gender\": \"MALE\",\r\n    \"birthDay\": \"2025-02-06\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/user",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update avatar",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/nguye/Downloads/[QC] Testcase Final.xlsx"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{host}}/user/avatar",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"user",
+								"avatar"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Brand",
+			"item": [
+				{
+					"name": "find",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/brand/all",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"brand",
+								"all"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "Adidas",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/nguye/OneDrive/Hình ảnh/Saved Pictures/Brand/adidas.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{host}}/brand",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"brand"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/study/myproject/Fasco shop/fascoshop/public/images/louis-vuitton-logo.png",
+									"disabled": true
+								},
+								{
+									"key": "name",
+									"value": "adidis",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{host}}/brand/8108cf96-32f6-4820-bd2a-907d1f41f2f9",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"brand",
+								"8108cf96-32f6-4820-bd2a-907d1f41f2f9"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "find all",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/brand/all",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"brand",
+								"all"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/brand/8eb373f8-3925-4056-bbdf-d7b2627dad38",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"brand",
+								"8eb373f8-3925-4056-bbdf-d7b2627dad38"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tag",
+			"item": [
+				{
+					"name": "find",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/tag",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"tag"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Cart",
+			"item": [
+				{
+					"name": "create cart item",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"varientId\": \"fb45443d-4b66-452e-8b0a-5402b9d823fa\",\r\n    \"quantity\": 1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/cart",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"cart"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get cart",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/cart",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"cart"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update cart item",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"quantity\": 7\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/cart/ad73eb48-4131-4218-9370-07aa9c5cc4d5",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"cart",
+								"ad73eb48-4131-4218-9370-07aa9c5cc4d5"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Province",
+			"item": [
+				{
+					"name": "District",
+					"item": [
+						{
+							"name": "find by id",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/province/1/district/1",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"province",
+										"1",
+										"district",
+										"1"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "find all",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/province",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"province"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "find by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/province/45",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"province",
+								"45"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Order",
+			"item": [
+				{
+					"name": "create",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"address\": {\r\n        \"fullName\": \"Nguyen Nhat Phap\",\r\n        \"email\": \"phap@gmail.com\",\r\n        \"phoneNumber\": \"+84986242329\",\r\n        \"provinceId\": \"1\",\r\n        \"districtId\": \"1\",\r\n        \"communeId\":\"1\",\r\n        \"street\": \"thon 2\"\r\n    },\r\n    \"isWrap\": true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/user/order",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"user",
+								"order"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "find by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/user/order/4fef3a80-7c1e-41cf-b7e0-2e3db0e40821",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"user",
+								"order",
+								"4fef3a80-7c1e-41cf-b7e0-2e3db0e40821"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "status order",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/user/order/aa3ce103-7b2e-4148-8a59-0d7dd21ecad8/complete",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"user",
+								"order",
+								"aa3ce103-7b2e-4148-8a59-0d7dd21ecad8",
+								"complete"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "find order",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/user/order",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"user",
+								"order"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Category",
+			"item": [
+				{
+					"name": "find",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/category",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"category"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Email",
+			"item": []
+		},
+		{
+			"name": "log",
+			"item": [
+				{
+					"name": "get my log",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/api/log",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"log"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update log",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"hasRead\": true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/log/30c87a09-d15a-477f-9fe8-f92fa479359e",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"log",
+								"30c87a09-d15a-477f-9fe8-f92fa479359e"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "test",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "images",
+							"type": "file",
+							"src": [
+								"/C:/Users/nguye/OneDrive/Hình ảnh/Saved Pictures/product/varient2_quan_jeanshort.webp",
+								"/C:/Users/nguye/OneDrive/Hình ảnh/Saved Pictures/product/varient1_quan_jeanshort.webp"
+							]
+						},
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/C:/Users/nguye/OneDrive/Hình ảnh/Saved Pictures/product/product4.webp"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{host}}",
+					"host": [
+						"{{host}}"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

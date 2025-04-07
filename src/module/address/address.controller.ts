@@ -27,7 +27,7 @@ export class AddressController {
   @Post('user/address')
   @UseGuards(JwtAuthGuard)
   async createAddress(@Req() req, @Body() createAddressDto: CreateAddressDto) {
-    console.log({createAddressDto})
+   
     const address: Address = await this.addressService.findByUserId(
       req.user.id,
     );
