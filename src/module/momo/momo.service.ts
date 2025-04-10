@@ -20,6 +20,7 @@ export class MomoService {
     storeId: string;
     redirectUrl: string;
     ipnUrl: string;
+    momoUrlApi: string;
 
     constructor(private readonly configService: ConfigService) {
         this.accessKey = configService.get('MOMO_ACCESSKEY');
@@ -32,6 +33,7 @@ export class MomoService {
         this.storeId = configService.get('MOMO_STOREID');
         this.redirectUrl = configService.get('MOMO_REDIRECT_URL');
         this.ipnUrl = configService.get('MOMO_IPN_URL');
+        this.momoUrlApi = configService.get('MOMO_URL_API');
     }
 
     genSignCreate(config: CreateMomoDto) {
@@ -104,7 +106,7 @@ export class MomoService {
         });
         const options = {
             method: 'POST',
-            url: 'https://test-payment.momo.vn/v2/gateway/api/create',
+            url: `${this.momoUrlApi}/create`,
             headers: {
                 'Content-Type': 'application/json',
                 'Content-Length': Buffer.byteLength(requestBody),
@@ -134,7 +136,7 @@ export class MomoService {
         });
         const options = {
             method: 'POST',
-            url: 'https://test-payment.momo.vn/v2/gateway/api/confirm',
+            url: `${this.momoUrlApi}/confirm`,
             headers: {
                 'Content-Type': 'application/json',
                 'Content-Length': Buffer.byteLength(requestBody),
@@ -216,7 +218,7 @@ export class MomoService {
 
         const options = {
             method: 'POST',
-            url: 'https://test-payment.momo.vn/v2/gateway/api/query',
+            url: `${this.momoUrlApi}/query`,
             headers: {
                 'Content-Type': 'application/json',
                 'Content-Length': Buffer.byteLength(requestBody),
