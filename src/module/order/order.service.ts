@@ -1,7 +1,7 @@
-import {  ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EStatusOrder, Order } from 'src/database/entity/order.entity';
-import { DataSource,  QueryRunner, Repository } from 'typeorm';
+import { EPaymentStatus, EStatusOrder, Order } from 'src/database/entity/order.entity';
+import { DataSource, QueryRunner, Repository } from 'typeorm';
 import { QueryOrderDto } from './dto/queryOrder.dto';
 import { UpdateOrderDto } from './dto/updateOrder.dto';
 import { ERole, User } from 'src/database/entity/user.entity';
@@ -18,8 +18,8 @@ export class OrderService {
     @InjectRepository(Order) private readonly orderRepo: Repository<Order>,
     private readonly dataSource: DataSource,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-    @Inject(REDIS_MANAGER) private readonly redisManager : Redis,
-  ) {}
+    @Inject(REDIS_MANAGER) private readonly redisManager: Redis,
+  ) { }
 
   async createOrder(createOrder: CreateOrder, queryRunner?: QueryRunner) {
     if (queryRunner) {
@@ -97,6 +97,8 @@ export class OrderService {
         'order.createAt',
         'order.updateAt',
         'order.status',
+        'order.paymentMethod',
+        'order.paymentStatus',
         'address.id',
         'address.orderId',
         'address.email',
@@ -136,6 +138,22 @@ export class OrderService {
     return order;
   }
 
+  async findOrderById(id: string) {
+    const order = await this.orderRepo.findOne({
+      where: { id }, relations: {
+        orderItems: {
+          varient: {
+            product: true
+          }
+        }
+      }
+    })
+    if (!order) {
+      throw new NotFoundException('Order not found')
+    }
+    return order
+  }
+
   async updateOrder(
     id: string,
     updateOrderDto: UpdateOrderDto,
@@ -153,7 +171,7 @@ export class OrderService {
         "Not allow set order's status is cancel whose status is not pending ",
       );
     }
-    const orderItems = order.orderItems||[];
+    const orderItems = order.orderItems || [];
     const queryRunner = this.dataSource.createQueryRunner();
 
     try {
@@ -181,11 +199,11 @@ export class OrderService {
         queryRunner,
       );
 
-      await queryRunner.commitTransaction();
       await Promise.all(orderItems.map(async (cartItem) => {
         const keys = await this.redisManager.keys(`product-detail:${cartItem.varient.product.id}:*`)
         await this.cacheManager.mdel(keys)
       }))
+      await queryRunner.commitTransaction();
 
       return {
         message: 'Cancel order successfully',
@@ -214,7 +232,7 @@ export class OrderService {
         "Not allow set order's status is complete whose status is not shipping ",
       );
     }
-    const result = await this.orderRepo.update(order.id, { status: EStatusOrder.COMPLETE });
+    const result = await this.orderRepo.update(order.id, { status: EStatusOrder.COMPLETE, paymentStatus: EPaymentStatus.HAS_PAID });
     return result
   }
 

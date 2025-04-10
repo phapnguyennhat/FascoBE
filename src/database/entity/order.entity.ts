@@ -3,8 +3,16 @@ import { PatternEntity } from "src/common/patternEntity";
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from "typeorm";
 import { OrderItem } from "./orderItem.entity";
 import { User } from "./user.entity";
-import { Exclude } from 'class-transformer';
 
+export enum EPaymentMethod {
+  MOMO = 'momo',
+  CASH = 'cash'
+}
+
+export enum EPaymentStatus { 
+  HAS_PAID = 'has_paid',
+  NOT_PAID = 'not_paid'
+}
 
 export enum EStatusOrder {
   PENDING = 'pending',
@@ -30,10 +38,15 @@ export class Order extends PatternEntity{
     type: 'jsonb'
   })
   totalOrder: TotalOrder;
-  
 
   @Column({ default: EStatusOrder.PENDING, type: 'enum', enum: EStatusOrder })
   status: EStatusOrder;
+
+  @Column({default: EPaymentMethod.CASH, type: 'enum', enum: EPaymentMethod})
+  paymentMethod: EPaymentMethod;
+
+  @Column({default: EPaymentStatus.NOT_PAID, type: 'enum', enum: EPaymentStatus})
+  paymentStatus: EPaymentStatus;
 
   @OneToMany(() => OrderItem, (orderItem: OrderItem) => orderItem.order, {cascade: true})
   orderItems: OrderItem[];

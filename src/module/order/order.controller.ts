@@ -20,7 +20,7 @@ import { CreateOrderItem } from './dto/createOrderItem.dto';
 import { CartService } from '../cart/cart.service';
 import { CartItem } from 'src/database/entity/cartItem.entity';
 import { feeShip, feeWrap, minOrderFreeShip, REDIS_MANAGER } from 'src/common/constant';
-import { EStatusOrder, Order, TotalOrder } from 'src/database/entity/order.entity';
+import { EPaymentStatus, EStatusOrder, Order, TotalOrder } from 'src/database/entity/order.entity';
 import { DistrictService } from '../district/district.service';
 import { CommuneService } from '../commune/commune.service';
 import { IdParam } from 'src/common/validate';
@@ -35,7 +35,7 @@ import { genKeyQuery, getPriceVarient } from 'src/util/utils';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import Redis from 'ioredis';
-
+import { MomoResponseDto } from './dto/momoResponse.dto';
 @Controller('')
 export class OrderController {
   constructor(
@@ -202,5 +202,30 @@ export class OrderController {
 
   
     return result
+  }
+
+  @Post('user/order/momo')
+  async updateOrderMoMo(@Body() body: any) {
+  
+    
+    const {orderId, resultCode} = body
+    const order: Order = await this.orderService.findOrderById(orderId);
+
+  
+
+    if(resultCode === 0) {
+      await this.orderService.updateOrder(orderId, {paymentStatus: EPaymentStatus.HAS_PAID})
+    } else {
+      await this.orderService.cancelOrder(order)
+      // restore cart item 
+      await Promise.all(order.orderItems.map(async (orderItem) => {
+        const {varientId, quantity} = orderItem
+        await this.cartService.createCartItem({userId: order.userId, varientId, quantity})
+      }))
+    }
+
+    return {
+      message: 'Update order momo successfully'
+    }
   }
 }

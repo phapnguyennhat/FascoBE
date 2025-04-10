@@ -36,5 +36,17 @@ export const validationSchema = Joi.object({
 
   MAIL_USER: Joi.string().required(),
   MAIL_PASSWORD: Joi.string().required(),
+
+  MOMO_HOST: Joi.string().required(),
+  MOMO_ACCESSKEY: Joi.string().required(),
+  MOMO_SECRETKEY: Joi.string().required(),
+  MOMO_ORDERINFO: Joi.string().required(),
+  MOMO_PARTNERCODE: Joi.string().required(),
+  MOMO_PARTNERNAME: Joi.string().required(),
+  MOMO_STOREID: Joi.string().required(),
+  MOMO_LANG: Joi.string().required(),
+
+  MOMO_REDIRECT_URL: Joi.string().required(),
+  MOMO_IPN_URL: Joi.string().required(),
   
 });

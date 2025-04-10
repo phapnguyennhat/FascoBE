@@ -33,7 +33,7 @@ import { HttpCacheInterceptor } from './common/http-cache.interceptor';
 import { RedisModule } from './module/redis/redis.module';
 import { LogModule } from './module/log/log.module';
 import { SocketModule } from './module/socket/socket.module';
-
+import { MomoModule } from './module/momo/momo.module';
 
 
 
@@ -78,6 +78,7 @@ import { SocketModule } from './module/socket/socket.module';
     RedisModule,
     LogModule,
     SocketModule,
+    MomoModule,
   ],
   controllers: [AppController],
   providers: [AppService,
